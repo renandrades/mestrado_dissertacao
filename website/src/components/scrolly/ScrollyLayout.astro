@@ -7,6 +7,7 @@ import StickyVizColumn from './StickyVizColumn.astro';
 interface RenderedSection {
   sectionId: string;
   chartId: string | null;
+  arrangement: 'paired' | 'full';
   Content: any;
 }
 
@@ -16,31 +17,65 @@ interface Props {
 
 const { sections } = Astro.props;
 
-const seen = new Set<string>();
-const charts: ChartConfig[] = [];
+// Consecutive "paired" sections share one sticky chart column (that's what
+// makes the scroll-driven chart swap feel continuous); a "full" section
+// breaks that flow and stands on its own, full-width, with no sticky
+// column of its own. Grouping preserves each section's original order.
+type PairedGroup = { kind: 'paired'; sections: RenderedSection[] };
+type FullGroup = { kind: 'full'; section: RenderedSection };
+const groups: Array<PairedGroup | FullGroup> = [];
+
 for (const section of sections) {
-  if (!section.chartId || seen.has(section.chartId)) continue;
-  const config = chartRegistry[section.chartId];
-  if (config) {
-    charts.push(config);
-    seen.add(section.chartId);
+  if (section.arrangement === 'full') {
+    groups.push({ kind: 'full', section });
+    continue;
+  }
+  const last = groups[groups.length - 1];
+  if (last?.kind === 'paired') {
+    last.sections.push(section);
+  } else {
+    groups.push({ kind: 'paired', sections: [section] });
   }
 }
 ---
 
-<div class="scrolly-layout">
-  <div class="scrolly-narrative">
-    {
-      sections.map((section) => (
-        <ScrollySection
-          sectionId={section.sectionId}
-          chartId={section.chartId}
-          chartConfig={section.chartId ? (chartRegistry[section.chartId] ?? null) : null}
-        >
+{
+  groups.map((group) => {
+    if (group.kind === 'full') {
+      const { section } = group;
+      return (
+        <section class="scrolly-step-full" id={section.sectionId}>
           <section.Content />
-        </ScrollySection>
-      ))
+        </section>
+      );
     }
-  </div>
-  <StickyVizColumn charts={charts} />
-</div>
+
+    const seen = new Set<string>();
+    const charts: ChartConfig[] = [];
+    for (const section of group.sections) {
+      if (!section.chartId || seen.has(section.chartId)) continue;
+      const config = chartRegistry[section.chartId];
+      if (config) {
+        charts.push(config);
+        seen.add(section.chartId);
+      }
+    }
+
+    return (
+      <div class="scrolly-layout">
+        <div class="scrolly-narrative">
+          {group.sections.map((section) => (
+            <ScrollySection
+              sectionId={section.sectionId}
+              chartId={section.chartId}
+              chartConfig={section.chartId ? (chartRegistry[section.chartId] ?? null) : null}
+            >
+              <section.Content />
+            </ScrollySection>
+          ))}
+        </div>
+        <StickyVizColumn charts={charts} />
+      </div>
+    );
+  })
+}

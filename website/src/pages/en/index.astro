@@ -12,6 +12,7 @@ const sections = await Promise.all(
     return {
       sectionId: entry.data.sectionId,
       chartId: entry.data.chartId,
+      arrangement: entry.data.arrangement,
       Content,
     };
   }),

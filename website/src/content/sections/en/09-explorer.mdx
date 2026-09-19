@@ -1,0 +1,27 @@
+---
+sectionId: gene-explorer
+title: Gene explorer
+order: 9
+chartId: null
+arrangement: full
+---
+
+import GeneExplorer from '../../../components/gene-explorer/GeneExplorer.astro';
+
+## Look up a gene
+
+Combining the predictions from the six trained networks made it possible to classify
+each of the nearly 20,000 human genes analyzed. Thirty-three of them were unanimously
+flagged as likely drivers by every network, with no prior evidence classifying them as
+such — real candidates for future investigation. On the other end, 1,477 genes were
+unanimously classified as passengers.
+
+Some cases stand out for another reason: genes already catalogued as passengers, yet
+flagged with high confidence as drivers by every network — like **YWHAZ**, which the
+literature has already linked to oncogenic properties in other contexts, even without
+being formally catalogued as a cancer driver.
+
+Use the search below to explore the prediction for any gene across the six PPI
+networks and the ensemble model.
+
+<GeneExplorer />

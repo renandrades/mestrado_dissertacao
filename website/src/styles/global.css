@@ -175,6 +175,70 @@ a {
   max-width: 42ch;
 }
 
+/* A standalone, full-width section (layout: "full" in frontmatter) — no
+   sticky chart column, so no scroll-driven min-height requirement either.
+   Its own narrative text keeps the same max-width as .scrolly-step p for
+   readability; anything else it renders (e.g. an interactive tool) can use
+   the full block width up to max-width. */
+.scrolly-step-full {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+}
+
+.scrolly-step-full h2 {
+  font-size: 1.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.scrolly-step-full p {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  max-width: 65ch;
+}
+
+/* A prose-only "full" section (see .scrolly-step-full) has no wide element
+   like the gene explorer to fill the 1200px block, so its <p>s (already
+   capped at 65ch) end up hugging the left edge with a lopsided void on the
+   right. Centering the whole block turns that leftover space into a
+   deliberate, balanced margin instead. */
+.closing-content {
+  max-width: 65ch;
+  margin: 0 auto;
+}
+
+.access-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.access-link {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border-hairline);
+  border-radius: 999px;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--text-primary);
+  background: var(--surface-1);
+}
+
+/* var(--series-driver) is tuned to read well as a data-viz accent (chart
+   marks, thin text/border accents), not as a large solid fill behind white
+   button text — at full strength that combination measures ~3.2-3.9:1
+   contrast in both themes, short of WCAG AA's 4.5:1 for normal text.
+   Darkening it here (not the shared token, which charts still rely on)
+   brings white-on-fill comfortably above 5:1 in both light and dark. */
+.access-link-primary {
+  background: color-mix(in srgb, var(--series-driver) 75%, black);
+  border-color: color-mix(in srgb, var(--series-driver) 75%, black);
+  color: #fff;
+}
+
 .sticky-viz {
   position: sticky;
   top: 4.5rem;

@@ -1,0 +1,27 @@
+---
+sectionId: gene-explorer
+title: Explorador de genes
+order: 9
+chartId: null
+arrangement: full
+---
+
+import GeneExplorer from '../../../components/gene-explorer/GeneExplorer.astro';
+
+## Procure um gene
+
+Combinando as previsões das seis redes treinadas, foi possível classificar cada um
+dos quase 20 mil genes humanos analisados. Trinta e três deles foram apontados como
+prováveis *drivers* por unanimidade entre todas as redes, sem nenhuma evidência prévia
+que os classificasse como tal — candidatos reais para investigação futura. Do lado
+oposto, 1.477 genes foram unanimemente classificados como *passenger*.
+
+Alguns casos chamam atenção por outro motivo: genes já catalogados como *passenger*,
+mas que o modelo aponta com alta confiança como *driver* em todas as redes — como
+**YWHAZ**, que a literatura já associou a propriedades oncogênicas em outros
+contextos, mesmo sem estar formalmente catalogado como causador de câncer.
+
+Use a busca abaixo para explorar a previsão de qualquer gene nas seis redes PPI e no
+modelo de *ensemble*.
+
+<GeneExplorer />
