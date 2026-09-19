@@ -1,0 +1,22 @@
+---
+sectionId: idea
+title: The idea
+order: 2
+chartId: ppi-network
+---
+
+## Genes as points in a network
+
+Instead of looking at each gene in isolation, this dissertation starts from a different
+question: what if a gene's position inside the protein interaction network already tells
+us something about its role in cancer?
+
+In protein-protein interaction (PPI) networks, each gene is a node and each known
+interaction between their proteins is an edge. Cancer driver genes tend to interact more
+with other relevant genes — a signal that goes unnoticed when a gene is analyzed on its
+own, outside of its biological context.
+
+This is where Graph Neural Networks (GNNs) come in: neural networks capable of
+propagating information between neighboring nodes, learning a representation for each
+gene that combines its own molecular attributes with the context of its neighborhood in
+the network.

@@ -1,0 +1,23 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ScrollyLayout from '../../components/scrolly/ScrollyLayout.astro';
+
+const entries = await getCollection('sectionsEn');
+entries.sort((a, b) => a.data.order - b.data.order);
+
+const sections = await Promise.all(
+  entries.map(async (entry) => {
+    const { Content } = await render(entry);
+    return {
+      sectionId: entry.data.sectionId,
+      chartId: entry.data.chartId,
+      Content,
+    };
+  }),
+);
+---
+
+<BaseLayout>
+  <ScrollyLayout sections={sections} />
+</BaseLayout>

@@ -1,0 +1,20 @@
+---
+sectionId: findings-imbalance
+title: "Finding 2: taming the imbalance"
+order: 5
+chartId: imbalance-strategies
+---
+
+## Taming the imbalance
+
+With fewer than 10% positive examples in any network, a "lazy" model that always
+predicts *passenger* is already right most of the time — and that is exactly the
+behavior that needs to be avoided. We compared four strategies: the standard cost
+function (*cross-entropy*), artificially shrinking the majority class
+(*undersampling*), weighting the cost of errors by class (balanced *cross-entropy*),
+and a more flexible version of that weighting (*focal loss*, in three configurations).
+
+*Undersampling* was consistently the worst choice — throwing away data never paid off.
+Balanced *cross-entropy* and *focal loss* delivered the best results in most cases,
+which is why *focal loss* was chosen as the default strategy for the next stage of
+hyperparameter optimization.

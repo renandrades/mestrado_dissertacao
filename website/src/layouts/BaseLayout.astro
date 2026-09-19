@@ -1,0 +1,33 @@
+---
+import '../styles/global.css';
+import { getLangFromUrl, useTranslations } from '../i18n/utils';
+import LangToggle from '../components/LangToggle.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const { title = t('site.title'), description = t('site.tagline') } = Astro.props;
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+  </head>
+  <body>
+    <header class="site-header">
+      <span class="site-title">{t('site.title')}</span>
+      <LangToggle />
+    </header>
+    <main>
+      <slot />
+    </main>
+  </body>
+</html>

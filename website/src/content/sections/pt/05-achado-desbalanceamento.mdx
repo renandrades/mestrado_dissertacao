@@ -1,0 +1,20 @@
+---
+sectionId: findings-imbalance
+title: "Achado 2: domando o desbalanceamento"
+order: 5
+chartId: imbalance-strategies
+---
+
+## Domando o desbalanceamento
+
+Com menos de 10% de exemplos positivos em qualquer rede, um modelo "preguiçoso" que
+sempre prevê *passenger* já acerta a maioria das vezes — e é exatamente esse
+comportamento que precisa ser evitado. Comparamos quatro estratégias: usar a função de
+custo padrão (*cross-entropy*), reduzir artificialmente a classe majoritária
+(*undersampling*), ponderar o custo dos erros por classe (*cross-entropy* balanceada) e
+uma versão mais flexível dessa ponderação (*focal loss*, em três configurações).
+
+O *undersampling* foi, de forma consistente, a pior escolha — descartar dados nunca
+compensou. *Cross-entropy* balanceada e *focal loss* trouxeram os melhores resultados
+na maioria dos casos, o que motivou a escolha de *focal loss* como estratégia padrão
+para a etapa seguinte de otimização de hiperparâmetros.

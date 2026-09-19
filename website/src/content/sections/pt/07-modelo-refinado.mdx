@@ -1,0 +1,18 @@
+---
+sectionId: refined-model
+title: O modelo refinado
+order: 7
+chartId: refined-model
+---
+
+## Ajuste fino, rede por rede
+
+Com o GCN escolhido, veio uma nova pergunta: qual é o melhor conjunto de
+hiperparâmetros para cada rede PPI? Foram testadas até 864 combinações de arquitetura,
+dropout, taxa de aprendizado e configuração da *focal loss* para as três redes
+menores, e uma grade reduzida de 288 combinações para as três maiores.
+
+Após o ajuste, cada modelo foi avaliado em um conjunto de teste independente e fixo —
+1.134 genes (159 *driver*, 975 *passenger*) comuns às seis redes, garantindo uma
+comparação justa. A rede STRING, a maior das seis, produziu o melhor modelo
+individual, com AUC-PR de 0,636.

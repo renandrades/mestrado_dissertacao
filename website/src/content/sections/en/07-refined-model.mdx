@@ -1,0 +1,18 @@
+---
+sectionId: refined-model
+title: The refined model
+order: 7
+chartId: refined-model
+---
+
+## Fine-tuning, network by network
+
+With GCN chosen, a new question emerged: what is the best set of hyperparameters for
+each PPI network? Up to 864 combinations of architecture, dropout, learning rate, and
+*focal loss* configuration were tested for the three smaller networks, and a reduced
+grid of 288 combinations for the three larger ones.
+
+After tuning, each model was evaluated on a fixed, independent test set — 1,134 genes
+(159 drivers, 975 passengers) common to all six networks, ensuring a fair comparison.
+STRING, the largest of the six networks, produced the best individual model, with an
+AUC-PR of 0.636.

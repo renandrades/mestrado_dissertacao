@@ -1,0 +1,19 @@
+---
+sectionId: findings-gnn-vs-ml
+title: "Finding 3: GNNs win, GCN leads"
+order: 6
+chartId: gnn-vs-traditional
+---
+
+## GNNs win, GCN leads
+
+We compared the three GNNs with four traditional machine learning algorithms (SVM,
+Random Forest, Gradient Boosting Trees, and a simple neural network), all using the
+same multi-omics and centrality features. Gradient Boosting Trees (GBT) was a
+surprise: it came very close to the GNNs, even beating GAT and GraphSAGE on every
+network, and outperforming GCN itself on the MULTINET network.
+
+Even so, looking across this chapter's full set of experiments — different feature
+types, different networks, different imbalance strategies — GCN was the model that
+most often kept the highest and most consistent performance. That is why it was chosen
+for the deep-dive in Chapter 6.

@@ -1,0 +1,25 @@
+---
+// GitHub Pages serves static files only (no edge-level Accept-Language
+// redirect rules like Netlify/Vercel would offer), so this meta-refresh +
+// script is the actual mechanism sending "/" to the default locale, not
+// just a fallback for it.
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL
+  : `${import.meta.env.BASE_URL}/`;
+const target = `${base}pt/`;
+---
+
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="refresh" content={`0; url=${target}`} />
+    <title>Redirecting…</title>
+  </head>
+  <body>
+    <p>Redirecting to <a href={target}>{target}</a>…</p>
+    <script define:vars={{ target }}>
+      window.location.replace(target);
+    </script>
+  </body>
+</html>

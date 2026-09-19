@@ -1,0 +1,10 @@
+---
+import { getLangFromUrl, useTranslations, swapLocalePath } from '../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const targetLang = lang === 'pt' ? 'en' : 'pt';
+const targetPath = swapLocalePath(Astro.url.pathname, targetLang);
+---
+
+<a class="lang-toggle" href={targetPath}>{t('nav.lang')}</a>

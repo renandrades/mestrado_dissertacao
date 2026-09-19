@@ -1,0 +1,20 @@
+---
+sectionId: findings-features
+title: "Finding 1: which features matter"
+order: 4
+chartId: centrality-lift
+---
+
+## What makes a good predictor
+
+We compared five types of input features: mutations, copy number variation, DNA
+methylation, gene expression, and the combination of all four (multi-omics). No single
+type won every time — mutations stood out in nearly half of the tested combinations,
+since they are the most direct cause of cancer, but combining all four data types
+usually helped.
+
+The most consistent finding, though, came from somewhere else: adding graph centrality
+measures — degree, betweenness, closeness, clustering coefficient — as extra node
+features improved performance in nearly every scenario tested, even for GNNs, which
+already see the graph's structure during training. This shows that a gene's position
+in the network carries information worth making explicit.

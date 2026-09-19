@@ -1,0 +1,23 @@
+---
+sectionId: methodology
+title: Metodologia
+order: 3
+chartId: methodology-pipeline
+---
+
+## Do dado bruto ao modelo treinado
+
+A metodologia se divide em quatro grandes etapas. Primeiro, a **coleta de dados**: seis
+redes PPI públicas, quatro tipos de dados multi-ômicos (mutações, variação do número de
+cópias, metilação do DNA e expressão gênica) cobrindo 16 tipos de câncer do TCGA, e listas
+de genes já confirmados — ou refutados — como causadores de câncer.
+
+Em seguida, o **pré-processamento** padroniza os identificadores dos genes, cruza redes e
+atributos para garantir que todo nó tenha suas próprias features, e calcula medidas de
+centralidade (grau, intermediação, proximidade, coeficiente de agrupamento) para cada rede.
+
+Na etapa de **treinamento**, cada algoritmo é ajustado e avaliado, estratégias de correção
+do desbalanceamento de classes são testadas, e os hiperparâmetros são otimizados.
+
+Por fim, uma abordagem de **ensemble** combina as previsões de modelos treinados em
+diferentes redes PPI para chegar a uma predição mais robusta.

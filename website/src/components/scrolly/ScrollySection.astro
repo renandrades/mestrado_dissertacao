@@ -1,0 +1,18 @@
+---
+import type { ChartConfig } from '../../charts/types';
+import ChartMount from '../charts/ChartMount.astro';
+
+interface Props {
+  sectionId: string;
+  chartId?: string | null;
+  /** This section's chart, rendered inline for mobile (no shared sticky column there). */
+  chartConfig?: ChartConfig | null;
+}
+
+const { sectionId, chartId, chartConfig } = Astro.props;
+---
+
+<section class="scrolly-step" id={sectionId} data-chart-id={chartId ?? undefined}>
+  <slot />
+  {chartConfig && <ChartMount config={chartConfig} variant="inline" />}
+</section>

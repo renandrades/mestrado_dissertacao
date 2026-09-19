@@ -1,0 +1,1078 @@
+\documentclass[ppgc, diss, english]{iiufrgs}
+
+\usepackage[utf8]{inputenc}   
+\usepackage{graphicx}           
+\usepackage{times}             
+\usepackage[alf,abnt-emphasize=bf]{abntex2cite}	
+\usepackage{graphicx,url}
+\usepackage{xspace}
+\usepackage{xcolor} %highlight text
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{lscape} % rotate one page to landscape
+\usepackage{adjustbox} 
+\usepackage{subfig}
+\usepackage{comment}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[fleqn]{nccmath}
+
+\usepackage{tabularx}
+
+
+\newcommand{\ie}{\emph{i.e.,}\xspace}
+\newcommand{\eg}{\emph{e.g.,}\xspace}
+\newcommand{\etal}{\emph{et al.}\xspace}
+\newcommand{\etc}{\emph{etc.}\xspace}
+
+
+
+% \theoremstyle{thmstyleone}%
+% \newtheorem{theorem}{Theorem}% 
+
+% \newtheorem{proposition}[theorem]{Proposition}%
+% \theoremstyle{thmstyletwo}%
+% \newtheorem{example}{Example}%
+% \newtheorem{remark}{Remark}%
+% \theoremstyle{thmstylethree}%
+% \newtheorem{definition}{Definition}
+
+% left fixed width:
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+ 
+% center fixed width:
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+ 
+% flush right fixed width:
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+
+% ---------------------------- %
+
+% \title{Graph Attention Networks for prediction of cancer driver genes}
+%\title{A Study of Graph Neural Networks for the Prediction of Cancer Driver Genes}
+\title{Prediction of Cancer Driver Genes with Graph Neural Networks: A Comparative Analysis and a Graph Convolutional Network-based Model}
+
+\author{Andrades}{Renan Soares de}
+\advisor[Prof\textsuperscript{a}.~Dr\textsuperscript{a}.]{Recamonde-Mendoza}{Mariana}
+
+% a data deve ser a da defesa; se nao especificada, são gerados
+% mes e ano correntes
+\date{April}{2023}
+
+% o local de realização do trabalho pode ser especificado (ex. para TCs)
+% com o comando \location:
+%\location{Itaquaquecetuba}{SP}
+
+% itens individuais da nominata podem ser redefinidos com os comandos
+% abaixo:
+% \renewcommand{\nominataReit}{Prof\textsuperscript{a}.~Wrana Maria Panizzi}
+% \renewcommand{\nominataReitname}{Reitora}
+% \renewcommand{\nominataPRE}{Prof.~Jos{\'e} Carlos Ferraz Hennemann}
+% \renewcommand{\nominataPREname}{Pr{\'o}-Reitor de Ensino}
+% \renewcommand{\nominataPRAPG}{Prof\textsuperscript{a}.~Joc{\'e}lia Grazia}
+% \renewcommand{\nominataPRAPGname}{Pr{\'o}-Reitora Adjunta de P{\'o}s-Gradua{\c{c}}{\~a}o}
+% \renewcommand{\nominataDir}{Prof.~Philippe Olivier Alexandre Navaux}
+% \renewcommand{\nominataDirname}{Diretor do Instituto de Inform{\'a}tica}
+% \renewcommand{\nominataCoord}{Prof.~Carlos Alberto Heuser}
+% \renewcommand{\nominataCoordname}{Coordenador do PPGC}
+% \renewcommand{\nominataBibchefe}{Beatriz Regina Bastos Haro}
+% \renewcommand{\nominataBibchefename}{Bibliotec{\'a}ria-chefe do Instituto de Inform{\'a}tica}
+% \renewcommand{\nominataChefeINA}{Prof.~Jos{\'e} Valdeni de Lima}
+% \renewcommand{\nominataChefeINAname}{Chefe do \deptINA}
+% \renewcommand{\nominataChefeINT}{Prof.~Leila Ribeiro}
+% \renewcommand{\nominataChefeINTname}{Chefe do \deptINT}
+
+% A seguir são apresentados comandos específicos para alguns
+% tipos de documentos.
+
+% Relatório de Pesquisa [rp]:
+% \rp{123}             % numero do rp
+% \financ{CNPq, CAPES} % orgaos financiadores
+
+% Trabalho Individual [ti]:
+% \ti{123}     % numero do TI
+% \ti[II]{456} % no caso de ser o segundo TI
+
+% Monografias de Especialização [espec]:
+% \espec{Redes e Sistemas Distribuídos}      % nome do curso
+% \coord[Profa.~Dra.]{Weber}{Taisy da Silva} % coordenador do curso
+% \dept{INA}                                 % departamento relacionado
+
+%
+% palavras-chave
+% iniciar todas com letras minúsculas, exceto no caso de abreviaturas
+%
+\keyword{cancer driver genes}
+\keyword{prediction model}
+\keyword{machine learning}
+\keyword{bioinformatics}
+\keyword{graph-based learning}
+\keyword{graph neural networks}
+
+
+%
+% inicio do documento
+%
+\begin{document}
+
+% folha de rosto
+% às vezes é necessário redefinir algum comando logo antes de produzir
+% a folha de rosto:
+% \renewcommand{\coordname}{Coordenadora do Curso}
+\maketitle
+
+% dedicatoria
+\clearpage
+\begin{flushright}
+\mbox{}\vfill
+{\sffamily\itshape
+``No tenemos miedo a las ruinas, llevamos\\ un mundo nuevo en nuestros corazones.\\
+Y ese mundo está creciendo en este instante.''\\}
+--- \textsc{Buenaventura Durruti}
+\end{flushright}
+
+%``Não tememos as ruínas, nós levamos\\ um mundo novo em nossos corações.\\
+%Esse mundo está crescendo nesse momento.''\\}
+
+
+
+\chapter*{Agradecimentos}
+
+Devo minha mais profunda gratidão aos meus pais, Rosângela e Paulo Ricardo, pelo amor e apoio que depositaram em mim ao longo de toda minha jornada acadêmica, por acreditarem em mim e encorajarem minhas decisões. Um punhado de caracteres jamais chegariam perto de mensurar o quanto vocês significam para mim, mas que estas palavras aqui publicadas fiquem à eternidade registradas que eu amo vocês.
+
+Quero agradecer também aos meus irmãos, Victor e Vinícius, pelo carinho e pelo forte laço de amizade. Vocês dois talvez nem imaginem o quanto foram e ainda são importantes para mim, torço muito pelo sucesso de vocês pois são pessoas inestimáveis.
+
+Sou grato também aos meus avós pelo amor que têm comigo, e aos meu tios Oraci Junior e Andrea, que sempre torcem muito por mim, que me apoiaram incondicionalmente no começo desta minha trajetória, e que são pessoas valorosas que contribuíram muito para que eu seja o que eu sou hoje.
+
+Sou imensamente grato à minha orientadora Mariana Recamonde Mendoza, pela dedicação, ensinamentos e apoio ao longo da minha pesquisa. Uma professora excepcional que sempre engrandeceu meu trabalho e soube motivar sempre que algo parecia difícil demais para ser vencido. Agradeço seu carinho e paciência comigo ao longo desta jornada, a senhora é uma inspiração de profissional que tenho um carinho enorme.
+
+Gostaria de agradecer a todos que passaram e contribuíram de alguma forma ao longo desta etapa, meu muito obrigado a todos por fazerem parte da minha vida e por me ajudarem a alcançar este marco significativo.
+
+
+
+
+
+
+
+
+
+
+
+
+% O texto do resumo não deve conter mais do que 500 palavras.
+\begin{abstract}
+
+% Identification of Cancer Driver Genes (CDG) is critical to advancing our understanding of cancer biology and developing effective diagnostic and therapeutic strategies. Despite the amount of genomic data available, the precise identification of CDGs from the vast array of somatic mutations remains a challenge.
+% Protein-protein interaction (PPI) networks play a critical role in understanding the complex mechanisms underlying many biological processes. These networks are involved in a diverse range of biological phenomena, including cancer, helping to identify genes and their links that contribute to the development and progression of the disease.
+% In recent years, graph-based machine learning methods such as Graph Neural Networks (GNN), due to their modeling dealing with non-Euclidean data, have emerged as powerful tools to analyze PPIs and predict nodes and edges. These computational methods are progressively becoming essential to unravel genomic signatures linked to cancer-causing events through graphs.
+% With that in mind, we developed a study focused on three main decision levels: (i) resource selection, (ii) class imbalance mitigation, and (iii) choice of algorithm for predicting CDGs. We performed an extensive analysis of different GNNs models through a semi-supervised approach, comparing them with traditional machine learning algorithms. We also explore joint learning and hyperparameter tuning strategies to improve the prediction performance of the selected model.
+% Our results demonstrate that GNNs outperform traditional machine learning approaches in predicting CDGs, we observe that the addition of node centrality measures as features contributes positively to the improvement of learning. We also highlight the contribution of set learning methodologies in improving performance metrics. Overall, our study provides insight into the use of GNNs for cancer driver discovery and highlights Graph Convolutional Networks as the best model for the task.
+
+Identifying cancer driver genes (CDGs) is crucial for improving the understanding of cancer biology and developing effective diagnostic and treatment strategies. However, accurately identifying CDGs from a vast array of somatic mutations remains a challenge despite the substantial amount of genomic data available. Recent developments in graph-based machine learning (ML) methods, such as Graph Neural Networks (GNNs), have made them powerful tools for analyzing protein-protein interaction (PPI) networks and performing predictions at the node level of biological networks. However, the use of GNNs for identifying candidate CDGs is still underexplored. This study aims to explore the predictive power of GNNs and develop a practical approach for predicting CDGs by integrating PPI networks and multi-omics data across several cancer types. We investigate data-centric and algorithmic decisions involved in model training to understand the potential of GNNs for this prediction task and to identify a robust methodology for classifying genes as cancer-causing or neutral in 16 types of cancer. Three primary decision levels are addressed: (i) node feature definition, (ii) class imbalance mitigation, and (iii) choice of the learning algorithm. 
+We extensively analyze different GNN models trained through a semi-supervised approach, using six different PPI networks and four types of omics data: single nucleotide variant, copy number variation, DNA methylation, and gene expression. These models are contrasted with the performance achieved by traditional ML algorithms using regular structured data for model development. Following the experimental comparative analysis, we explore ensemble learning strategies and hyperparameter tuning to improve the predictive power of the top-performing model. 
+Our results demonstrate that GNNs outperform traditional ML approaches in predicting CDGs, and that adding node centrality measures as node features improves learning outcomes even for graph-based learning methods. We also highlight the significant contribution of ensemble learning methodologies in improving performance metrics by aggregating predictions of models trained on multiple PPI networks. Finally, using the proposed approach, we provide predictions for unlabeled genes regarding their potential role as CDGs. 
+Overall, this study provides relevant insights into using GNNs to predict CDGs and highlights Graph Convolutional Networks as an effective algorithm for this task.
+% Identifying cancer driver genes (CDGs) is crucial to improving understanding of the biology of the disease and developing effective diagnostic and treatment strategies. Although there is a substantial amount of genomic data available, accurately identifying CDGs from a vast array of somatic disorders remains a challenge.
+% Recently, graph-based machine learning (ML) methods, such as Graph Neural Networks (GNNs), harnessed as powerful tools to analyze protein-protein interaction (PPI) networks and perform predictions at node and edge level.
+% The present study aims to propose an effective approach to predict CDGs, exploring GNN algorithms that integrate PPI networks and multi-omic data. We performed an extensive investigation of data-centric and algorithmic decisions during model training in order to understand the potential of GNNs and identify a robust methodology capable of classifying genes as cancer-causing or neutral in 16 types of cancer. Three main decision levels were investigated: (i) node features definition, (ii) class imbalance mitigation and (iii) choice of learning algorithm. We performed an extensive analysis of different GNNs models through a semi-supervised approach, comparing them with traditional ML algorithms. We also explore ensemble learning strategies and hyperparameter tuning to improve the predictive performance of the best selected model.
+% Our results demonstrated that GNNs outperform traditional ML approaches in predicting cancer-causing genes. We observed that the addition of node centrality measures as node features contributes positively to the improvement of learning. We also highlight the contribution of ensemble learning methodologies in improving performance metrics. Overall, our study provides insight into the use of GNNs for the prediction of CDGs and highlights Graph Convolutional Networks as the best algorithm to approach this task.
+\end{abstract}
+
+
+
+
+% resumo na outra língua
+% como parâmetros devem ser passados o titulo e as palavras-chave
+% na outra língua, separadas por vírgulas
+\begin{englishabstract}{Predição de genes causadores de câncer com Graph Neural Networks: uma análise comparativa e um modelo baseado em Graph Convolutional Networks}{Genes causadores de câncer, modelo preditivo, aprendizado de máquina, bioinformática, aprendizado baseado em grafos, rede neural de grafo}
+Identificar os genes causadores de câncer (CDGs, de \textit{cancer driver genes}) é crucial para melhor compreender a biologia do câncer e desenvolver estratégias eficazes de diagnóstico e tratamento. No entanto, a identificação precisa de CDGs a partir de uma vasta gama de mutações somáticas continua sendo um desafio, apesar da quantidade substancial de dados genômicos disponíveis. Desenvolvimentos recentes em métodos de aprendizado de máquina (AM) baseados em grafos, como \textit{Graph Neural Networks} (GNNs), tornaram-se ferramentas poderosas para analisar redes de interação proteína-proteína (PPI) e realizar previsões em nível de nós. No entanto, o uso de GNNs para identificar CDGs candidatos ainda é pouco explorado. Este estudo visa explorar o poder preditivo de GNNs no contexto de predição de CDGs, desenvolvendo uma abordagem prática baseada na integração de redes PPI e dados multi-ômicos em vários tipos de câncer. Investigamos decisões centradas em dados e algorítmicas envolvidas no treinamento de modelos para entender o potencial de GNNs para essa tarefa de predição e para identificar uma metodologia robusta para classificar genes como CDGs ou neutros em 16 tipos de câncer. Três níveis primários de decisão são abordados: (i) definição de atributos do nó, (ii) mitigação do desequilíbrio de classes e (iii) escolha do algoritmo de aprendizado. 
+Analisamos extensivamente diferentes modelos de GNNs treinados por meio de uma abordagem semi-supervisionada, usando seis redes PPI diferentes e quatro tipos de dados ômicos: variantes de nucleotídeos únicos, variação do número de cópias, metilação do DNA e expressão gênica. Esses modelos são comparados com o desempenho alcançado pelos algoritmos tradicionais de AM, treinados sobre dados estruturados regulares. Após a análise comparativa experimental, exploramos estratégias de aprendizado \textit{ensemble} e ajuste de hiperparâmetros para melhorar o poder preditivo do modelo de melhor desempenho. 
+Nossos resultados demonstram que as GNNs superam as abordagens tradicionais de AM na previsão de CDGs e que a adição de medidas de centralidade de nós como atributos dos nós no grafo melhora os resultados de aprendizado, mesmo para métodos de aprendizado baseados em grafos. Também destacamos a contribuição significativa das metodologias de aprendizado \textit{ensemble} na melhoria das métricas de desempenho, agregando previsões de modelos treinados em várias redes PPI. Finalmente, usando a abordagem proposta, fornecemos previsões para genes não marcados em relação ao seu papel potencial como CDGs. 
+No geral, este estudo fornece informações relevantes sobre o uso de GNNs para prever CDGs e destaca as Redes Convolucionais de Grafos como um algoritmo eficaz para esta tarefa.
+% A identificação de genes responsáveis pelo câncer é crucial para aprimorar a compreensão da biologia da doença e desenvolver estratégias eficazes de diagnóstico e tratamento. Embora haja uma quantidade substancial de dados genômicos disponíveis, identificar com precisão os genes causadores do câncer a partir de um vasto conjunto de mutações somáticas ainda é um desafio. 
+% Recentemente, métodos baseados em aprendizado de máquina em grafos, como \textit{Graph Neural Networks} (GNNs), surgiram como ferramentas poderosas para analisar redes de interações proteína-proteína (PPI) e realizar predições em nível de nós e arestas. 
+% O presente estudo tem como objetivo propor uma abordagem eficaz para prever genes causadores de câncer (CDGs), explorando algoritmos de GNNs que integram redes de PPI e dados multi-ômicos. Realizamos uma ampla investigação de decisões centradas em dados e algoritmos durante o treinamento do modelo, a fim de compreender o potencial de GNNs e identificar uma metodologia robusta capaz de classificar genes como causadores de câncer ou neutros em 16 tipos de câncer. Três níveis de decisão principais foram analisadas: (i) definição de atributos, (ii) mitigação de desbalanceamento de classes e (iii) escolha do algoritmo de aprendizado. Realizamos uma extensa análise de diferentes modelos GNNs através de uma abordagem semi-supervisionada, comparando-os com algoritmos tradicionais de aprendizado de máquina. Também exploramos estratégias de aprendizado ensemble e ajuste de hiperparâmetros para melhorar o desempenho preditivo do melhor modelo selecionado. 
+% Nossos resultados demonstram que os GNNs superam as abordagens tradicionais de aprendizado de máquina na previsão de genes causadores de câncer. Observamos que a adição de medidas de centralidades de nós como atributos contribui positivamente para o aprimoramento do aprendizado; Destacamos, também, a contribuição de metodologias de aprendizado \textit{ensemble} na melhoria de métricas de desempenho. No geral, nosso estudo fornece informações sobre o uso de GNNs para a descoberta de genes causadores de câncer e destaca as \textit{Graph Convolutional Networks} como o melhor algoritmo para abordar esta tarefa.
+\end{englishabstract}
+
+
+
+
+% lista de abreviaturas e siglas
+% o parametro deve ser a abreviatura mais longa
+\begin{listofabbrv}{AUC-ROC}
+        \item[AI] Artificial Intelligence
+        \item[ACC] Accuracy
+        \item[ANN] Artificial Neural Network
+        \item[AUC-PR] Area Under the Precision-Recall Curve
+        \item[AUC-ROC] Area Under the ROC Curve
+        
+        \item[CE] Cross-Entropy
+        \item[CV] Cross-Validation
+        \item[CDG] Cancer Driver Gene
+        \item[CNA] Copy Number Alteration
+        \item[CNN] Convolutional Neural Network
+        \item[CNV] Copy Number Variation
+        \item[CPDB] Consensus Path DB
+        
+        \item[DL] Deep Learning
+        \item[DT] Decision tree
+        \item[DNA] Deoxyribonucleic Acid
+
+        \item[FL] Focal loss
+
+        \item[GAT] Graph Attention Network
+        \item[GBT] Gradient Boosting Tree
+        \item[GCN] Graph Convolutional Network
+        \item[GNN] Graph Neural Network
+
+        \item[HGNC] HUGO Gene Nomenclature Committee
+
+        \item[IARC] International Agency for Research on Cancer 
+        \item[ICGC] International Cancer Genome Consortium
+         
+        \item[ML] Machine Learning
+        \item[MLP] Multilayer Perceptron
+        \item[mRNA] Messenger RNA
+        
+        \item[OG] Oncogene
+        \item[OMIM] Online Mendelian Inheritance in Man
+
+        \item[PPI] Protein-protein interaction
+        \item[PREC] Precision
+
+        \item[RF] Random forests
+        \item[REC] Recall
+        \item[RNA] Ribonucleic acid
+        \item[ROC] Receiver Operating Characteristic
+
+        \item[SNV] Single Nucleotide Variant
+        
+        \item[TSG] Tumor Supressor Gene
+        \item[TSS] Transcription Start Site
+        \item[TCGA] The Cancer Genome Atlas              
+        
+        
+         
+        
+        
+        
+
+    
+\end{listofabbrv}
+
+% idem para a lista de símbolos
+%\begin{listofsymbols}{$\alpha\beta\pi\omega$}
+%       \item[$\sum{\frac{a}{b}}$] Somatório do produtório
+%       \item[$\alpha\beta\pi\omega$] Fator de inconstância do resultado
+%\end{listofsymbols}
+
+% lista de figuras
+\listoffigures
+
+% lista de tabelas
+\listoftables
+
+% sumario
+\tableofcontents
+
+% ---------------------------------- %
+
+\input{./texts/A_introducao}
+\input{./texts/B_background}
+\input{./texts/C_literatureReview}
+\input{./texts/D_materialsAndMethods}
+\input{./texts/E_results1}
+\input{./texts/F_results2}
+\input{./texts/G_conclusao}
+%cap - metodologia (dados omicos, redes, métodos, estrategia de avaliacao...)
+%cap - resultados análise comparativa
+    % desempenhos GNNs vs shallow ML (desempenhos entre GNNs)
+    % desempenhos de diferentes funções de loss
+    % desempenhos de diferentes features
+    % desempenhos para diferentes redes PPI
+    % ultima seção, conclui sobre os achados do capitulo.
+%cap - resultados para GCN otimizada, com todas as redes PPI. 
+    % testar ensemble combinando diferentes redes PPI (vs union) -  Manter o mesmo conjunto de teste
+    % ultima seção, conclui sobre os achados do capitulo.
+%cap - Conclusao
+
+
+
+
+
+
+
+
+% \chapter{Estado da arte}
+% \chapter{Mais estado da arte}
+% \chapter{A minha contribuição}
+% \chapter{Prova de que a minha contribuição é válida}
+% \chapter{Conclusão}
+
+% referencias
+% aqui será usado o environment padrão `thebibliography'; porém, sugere-se
+% seriamente o uso de BibTeX e do estilo abnt.bst (veja na página do
+% UTUG)
+%
+% observe também o estilo meio estranho de alguns labels; isso é
+% devido ao uso do pacote `natbib', que permite fazer citações de
+% autores, ano, e diversas combinações desses
+
+\bibliographystyle{abntex2-alf}
+\bibliography{bibliografia}
+
+
+\appendix
+
+\chapter{Material of literature review}
+\label{sec:appendix_LiteratureReview}
+
+\begin{table*}[]
+\caption{Summary of the scope and extent to which ML-based methods are covered by the main reviews related to the prediction of cancer driver genes.  \label{tab:relatedworks}}
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{L{3.5cm}L{16cm}}
+\hline
+\textbf{Reference} & \textbf{Brief description of review's scope} \\
+\hline
+\citet{zhang2014identifying} & Biology-based and ML-based approaches to identify driver mutations. Methods are categorized into three strategies: analysis of difference in mutation frequencies between driver and passenger mutations, prediction of functional impacts of mutation, and prediction provided by ML models. Only four ML-based methods are included, two of which were developed for the general problem of distinguishing disease-related mutations from common polymorphisms. \\\hline
+\citet{chen2015deciphering} & Tools to decipher oncogenic drivers, categorized according to the specific mutational level tackled, from nucleotide- to network-level. For nucleotide-level approaches, six ML methods are discussed, but only four were specifically designed for classifying somatic mutations as driver or passenger ones. \\\hline
+\citet{cheng2016advances} & Computational approaches to identify driver mutations and significantly mutated genes from next-generation sequencing data, categorized according to the types of features used: mutation frequency, functional impact, structural genomics, network or pathway, and data integration. Authors mention that ML underlie most tools reviewed, but do not provide methodological details regarding ML algorithms used and model training procedures adopted. 
+\\\hline
+\citet{zhang2016discovery} & Brief summary of nine methods to predict driver genes, including two ML-based methods, and a more extensive review regarding methods for identifying driver pathways or modules in cancer. For the second part, the methods reviewed do not use ML algorithms but rather probability models or network-based approaches.\\\hline
+\citet{dimitrakopoulos2017computational} & Three different classes of approaches for prediction of cancer genes and pathways: methods using known biological pathways, network-based methods, and methods detecting pathways \textit{de novo}. Although ML algorithms may be eventually used in the methods reviewed, they were not the focus of the discussion carried out by the authors.\\\hline
+\citet{chen2020comprehensive} & Comprehensive assessment of computational methods for prediction of cancer driver mutations, in which 33 methods were analyzed in terms of predictive performance using five consistent and complementary benchmark datasets. Authors include some ML-based methods in their analyses, briefly describing the type of features used, but their emphasis is in comparing methods' performance rather than reviewing methodological details of their implementation. \\\hline
+\citet{pham2021computational} & Computational methods for prediction of cancer drivers categorized according to their prediction target: single driver identification, cancer driver module identification, and personalized cancer driver identification. Twenty-four methods are discussed and eight were selected for a comparative study of predictive performance. The ML algorithms adopted by some of the reviewed methods are only cited, without further discussion about features used and other methodological details. \\\hline
+\citet{Rogers+2021} & Seventeen generic ML-based tools to predict the pathogenic impact of human genome variants and eight tools specialized in cancer driver mutations. Most reviewed approaches are based on supervised learning techniques and data integration strategies. Although authors briefly mention the ML algorithms employed in these tools, the review is limited in the number of papers covered and in providing a detailed description about methodological aspects of tools' development, such as biological features used and how they are jointly explored with distinct ML approaches. Also, a substantial part of the review is dedicated to analyze the incidence of predicted high-confidence driver mutations obtained with one specific ML-based predictor for well-known cancer genes across distinct cancer types.\\
+\hline
+\end{tabular}%
+}
+\end{table*}
+
+
+
+
+
+
+
+
+
+
+
+\chapter{Additional results for the comparative evaluation of algorithms and data for CDG prediction}
+\label{sec:appendix_cap5}
+
+This appendix provides additional results for the experiments reported in Chapter~\ref{sec:results:comparative_evaluation}, which aim to conduct an experimental comparison of learning algorithms and data-centric decisions for the prediction of CDGs.
+
+
+\begin{landscape}
+
+\begin{table}[!th]
+\caption{Complete experiments for the HPRD network, referring to the test data for the AUC-PR metric. \label{tab:completa_hprd}}
+\centering
+ \begin{adjustbox}{scale=0.8,center}
+
+\begin{tabular}{lllllll}
+\hline
+                           & \multicolumn{6}{c}{\textbf{GAT}}                                                                                                                              \\ \cline{2-7} 
+                           & Cross entropy & Undersampling & Weighted focal loss ($\gamma$=0; $\alpha$=0.85) & Focal loss ($\gamma$=0.5; $\alpha$=0.50) & Focal loss ($\gamma$=1; $\alpha$=0.25) & Focal loss ($\gamma$=2; $\alpha$=0.25) \\
+Mutations                  & 0.3565        & 0.3324        & 0.3604                            & 0.3262                     & 0.2885                   & 0.3158                   \\
+CNA                        & 0.2761        & 0.2616        & 0.3599                            & 0.3737                     & 0.3785                   & 0.3358                   \\
+DNA Methylation            & 0.3844        & 0.3030        & 0.3152                            & 0.3539                     & 0.3340                   & 0.2451                   \\
+Gene Expression            & 0.2806        & 0.2672        & 0.3578                            & 0.3202                     & 0.3205                   & 0.2794                   \\
+Multi-Omics                & 0.3258        & 0.2901        & 0.4020                            & 0.4546                     & 0.4153                   & 0.3540                   \\
+Multi-Omics and Centrality & 0.3992        & 0.3275        & 0.4215                            & 0.3873                     & 0.3581                   & 0.3792                   \\ \cline{2-7} 
+                           & \multicolumn{6}{c}{\textbf{GCN}}                                                                                                                              \\ \cline{2-7} 
+                           & Cross entropy & Undersampling & Weighted focal loss ($\gamma$=0; $\alpha$=0.85) & Focal loss ($\gamma$=0.5; $\alpha$=0.50) & Focal loss ($\gamma$=2; $\alpha$=0.25) & Focal loss ($\gamma$=2; $\alpha$=0.25) \\
+Mutations                  & 0.4470        & 0.4390        & 0.4783                            & 0.4079                     & 0.4230                   & 0.5160                   \\
+CNA                        & 0.3992        & 0.4266        & 0.4722                            & 0.4541                     & 0.2098                   & 0.4090                   \\
+DNA Methylation            & 0.3708        & 0.3568        & 0.3995                            & 0.2905                     & 0.1992                   & 0.3612                   \\
+Gene Expression            & 0.2967        & 0.3989        & 0.4313                            & 0.3793                     & 0.1495                   & 0.3600                   \\
+Multi-Omics                & 0.4984        & 0.4988        & 0.4771                            & 0.5371                     & 0.5465                   & 0.5524                   \\
+Multi-Omics and Centrality & 0.5960        & 0.5479        & 0.5918                            & 0.5235                     & 0.5756                   & 0.5583                   \\ \cline{2-7} 
+                           & \multicolumn{6}{c}{\textbf{GraphSAGE}}                                                                                                                        \\ \cline{2-7} 
+                           & Cross entropy & Undersampling & Weighted focal loss ($\gamma$=0; $\alpha$=0.85) & Focal loss ($\gamma$=0.5; $\alpha$=0.50) & Focal loss ($\gamma$=2; $\alpha$=0.25) & Focal loss ($\gamma$=2; $\alpha$=0.25) \\
+Mutations                  & 0.4089        & 0.3346        & 0.4371                            & 0.3682                     & 0.3903                   & 0.3840                   \\
+CNA                        & 0.3134        & 0.2780        & 0.2573                            & 0.3029                     & 0.2952                   & 0.2807                   \\
+DNA Methylation            & 0.2402        & 0.2073        & 0.2576                            & 0.2931                     & 0.2297                   & 0.2620                   \\
+Gene Expression            & 0.2397        & 0.2194        & 0.2608                            & 0.2651                     & 0.2308                   & 0.2333                   \\
+Multi-Omics                & 0.3317        & 0.2258        & 0.3052                            & 0.3950                     & 0.3543                   & 0.3472                   \\
+Multi-Omics and Centrality & 0.3786        & 0.3332        & 0.4069                            & 0.4230                     & 0.3985                   & 0.4480                   \\ \hline
+\end{tabular}
+
+\end{adjustbox}
+
+\end{table}
+\end{landscape}
+
+
+\begin{landscape}
+
+\begin{table}[!th]
+\caption{Complete experiments for the MULTINET network, referring to the test data for the AUC-PR metric. \label{tab:completa_multinet}}
+\centering
+ \begin{adjustbox}{scale=0.8,center}
+
+\begin{tabular}{lllllll}
+\hline
+                           & \multicolumn{6}{c}{\textbf{GAT}}                                                                                                                              \\ \cline{2-7} 
+                           & Cross entropy & Undersampling & Weighted focal loss ($\gamma$=0; $\alpha$=0.85) & Focal loss ($\gamma$=0.5; $\alpha$=0.50) & Focal loss ($\gamma$=1; $\alpha$=0.25) & Focal loss ($\gamma$=2; $\alpha$=0.25) \\
+Mutations                  & 0.2142        & 0.2492        & 0.2297                            & 0.2857                     & 0.1852                   & 0.1988                   \\
+CNA                        & 0.2865        & 0.1982        & 0.2241                            & 0.2044                     & 0.2441                   & 0.2442                   \\
+DNA Methylation            & 0.2219        & 0.2741        & 0.2158                            & 0.2495                     & 0.2065                   & 0.2599                   \\
+Gene Expression            & 0.2562        & 0.1758        & 0.1746                            & 0.2169                     & 0.2303                   & 0.1995                   \\
+Multi-Omics                & 0.2182        & 0.3318        & 0.3687                            & 0.4045                     & 0.2117                   & 0.3701                   \\
+Multi-Omics and Centrality & 0.3648        & 0.2817        & 0.3551                            & 0.4143                     & 0.3363                   & 0.2753                   \\ \cline{2-7} 
+                           & \multicolumn{6}{c}{\textbf{GCN}}                                                                                                                              \\ \cline{2-7} 
+                           & Cross entropy & Undersampling & Weighted focal loss ($\gamma$=0; $\alpha$=0.85) & Focal loss ($\gamma$=0.5; $\alpha$=0.50) & Focal loss ($\gamma$=2; $\alpha$=0.25) & Focal loss ($\gamma$=2; $\alpha$=0.25) \\
+Mutations                  & 0.3523        & 0.3704        & 0.4261                            & 0.3711                     & 0.3672                   & 0.3793                   \\
+CNA                        & 0.3277        & 0.3621        & 0.3808                            & 0.3008                     & 0.0735                   & 0.2855                   \\
+DNA Methylation            & 0.3185        & 0.3075        & 0.3499                            & 0.3013                     & 0.1824                   & 0.2726                   \\
+Gene Expression            & 0.2506        & 0.3451        & 0.3360                            & 0.3324                     & 0.2711                   & 0.2921                   \\
+Multi-Omics                & 0.3839        & 0.3153        & 0.3474                            & 0.4133                     & 0.2783                   & 0.4272                   \\
+Multi-Omics and Centrality & 0.4019        & 0.4521        & 0.4661                            & 0.4177                     & 0.2978                   & 0.4481                   \\ \cline{2-7} 
+                           & \multicolumn{6}{c}{\textbf{GraphSAGE}}                                                                                                                        \\ \cline{2-7} 
+                           & Cross entropy & Undersampling & Weighted focal loss ($\gamma$=0; $\alpha$=0.85) & Focal loss ($\gamma$=0.5; $\alpha$=0.50) & Focal loss ($\gamma$=2; $\alpha$=0.25) & Focal loss ($\gamma$=2; $\alpha$=0.25) \\
+Mutations                  & 0.3842        & 0.2907        & 0.3543                            & 0.3835                     & 0.3435                   & 0.3196                   \\
+CNA                        & 0.1996        & 0.1821        & 0.2083                            & 0.2029                     & 0.2086                   & 0.2146                   \\
+DNA Methylation            & 0.1770        & 0.1276        & 0.1792                            & 0.1612                     & 0.1719                   & 0.1918                   \\
+Gene Expression            & 0.1981        & 0.1540        & 0.2021                            & 0.1846                     & 0.1782                   & 0.1867                   \\
+Multi-Omics                & 0.2671        & 0.2050        & 0.2685                            & 0.3039                     & 0.3121                   & 0.2620                   \\
+Multi-Omics and Centrality & 0.3174        & 0.2188        & 0.3929                            & 0.3264                     & 0.3196                   & 0.3822                   \\ \hline
+\end{tabular}
+
+\end{adjustbox}
+
+\end{table}
+\end{landscape}
+
+
+
+
+\begin{landscape}
+
+\begin{table}[!th]
+\caption{Complete experiments for the IREF network, referring to the test data for the AUC-PR metric. \label{tab:completa_iref}}
+\centering
+ \begin{adjustbox}{scale=0.8,center}
+
+\begin{tabular}{lllllll}
+\hline
+                           & \multicolumn{6}{c}{\textbf{GAT}}                                                                                                                              \\ \cline{2-7} 
+                           & Cross entropy & Undersampling & Weighted focal loss ($\gamma$=0; $\alpha$=0.85) & Focal loss ($\gamma$=0.5; $\alpha$=0.50) & Focal loss ($\gamma$=1; $\alpha$=0.25) & Focal loss ($\gamma$=2; $\alpha$=0.25) \\
+Mutations                  & 0.2606        & 0.1668        & 0.2748                            & 0.3085                     & 0.2580                   & 0.3240                   \\
+CNA                        & 0.3027        & 0.2270        & 0.3147                            & 0.2950                     & 0.2828                   & 0.2929                   \\
+DNA Methylation            & 0.3088        & 0.3135        & 0.3365                            & 0.1831                     & 0.2061                   & 0.2437                   \\
+Gene Expression            & 0.2211        & 0.2500        & 0.2342                            & 0.2542                     & 0.2900                   & 0.2878                   \\
+Multi-Omics                & 0.2144        & 0.2444        & 0.2727                            & 0.3523                     & 0.3169                   & 0.3955                   \\
+Multi-Omics and Centrality & 0.3598        & 0.1714        & 0.3135                            & 0.3546                     & 0.2977                   & 0.3917                   \\ \cline{2-7}
+                           & \multicolumn{6}{c}{\textbf{GCN}}                                                                                                                              \\ \cline{2-7}
+                           & Cross entropy & Undersampling & Weighted focal loss ($\gamma$=0; $\alpha$=0.85) & Focal loss ($\gamma$=0.5; $\alpha$=0.50) & Focal loss ($\gamma$=2; $\alpha$=0.25) & Focal loss ($\gamma$=2; $\alpha$=0.25) \\
+Mutations                  & 0.4344        & 0.3862        & 0.3964                            & 0.3268                     & 0.3289                   & 0.3714                   \\
+CNA                        & 0.2844        & 0.3159        & 0.3855                            & 0.3972                     & 0.0864                   & 0.3528                   \\
+DNA Methylation            & 0.2509        & 0.2937        & 0.2901                            & 0.2744                     & 0.0883                   & 0.2661                   \\
+Gene Expression            & 0.2699        & 0.3221        & 0.3803                            & 0.2760                     & 0.0691                   & 0.3898                   \\
+Multi-Omics                & 0.4315        & 0.4834        & 0.4084                            & 0.4813                     & 0.4191                   & 0.3723                   \\
+Multi-Omics and Centrality & 0.4274        & 0.4384        & 0.4841                            & 0.4664                     & 0.3776                   & 0.4488                   \\ \cline{2-7}
+                           & \multicolumn{6}{c}{\textbf{GraphSAGE}}                                                                                                                        \\ \cline{2-7}
+                           & Cross entropy & Undersampling & Weighted focal loss ($\gamma$=0; $\alpha$=0.85) & Focal loss ($\gamma$=0.5; $\alpha$=0.50) & Focal loss ($\gamma$=2; $\alpha$=0.25) & Focal loss ($\gamma$=2; $\alpha$=0.25) \\
+Mutations                  & 0.3550        & 0.2478        & 0.3239                            & 0.2762                     & 0.4245                   & 0.3643                   \\
+CNA                        & 0.2036        & 0.1777        & 0.1880                            & 0.1970                     & 0.1854                   & 0.1660                   \\
+DNA Methylation            & 0.1482        & 0.1790        & 0.1697                            & 0.1643                     & 0.1835                   & 0.2215                   \\
+Gene Expression            & 0.1850        & 0.1389        & 0.1674                            & 0.2232                     & 0.1546                   & 0.1796                   \\
+Multi-Omics                & 0.2001        & 0.1597        & 0.2187                            & 0.2208                     & 0.2674                   & 0.2985                   \\
+Multi-Omics and Centrality & 0.2427        & 0.1887        & 0.3013                            & 0.2296                     & 0.2832                   & 0.2928                   \\ \hline
+\end{tabular}
+
+\end{adjustbox}
+
+\end{table}
+\end{landscape}
+
+\begin{figure*}[!ht]
+\centering
+
+\caption{Training and validation for the MULTINET network in (a) GAT, (b) GCN and (c) GraphSAGE using 300 epochs and AUC-PR and AUC-ROC as performance metrics}
+
+   \subfloat[GAT \label{fig:gat_aucpr_roc_multinet}]{%
+      \includegraphics[width=\textwidth]{images/apendice/aucpr_roc_gat_multinet.pdf}}
+\hspace{\fill}
+   \subfloat[GCN \label{fig:gcn_aucpr_roc_multinet} ]{%
+      \includegraphics[width=\textwidth]{images/apendice/aucpr_roc_gcn_multinet.pdf}}
+\hspace{\fill}
+   \subfloat[GraphSAGE \label{fig:sage_aucpr_roc_multinet}]{%
+      \includegraphics[width=\textwidth]{images/apendice/aucpr_roc_sage_multinet.pdf}}\\
+
+\label{fig:aucpr_roc_multinet}
+\end{figure*}
+
+
+\begin{figure*}[!ht]
+\centering
+
+\caption{Training and validation for the IREF network in (a) GAT, (b) GCN and (c) GraphSAGE using 300 epochs and AUC-PR and AUC-ROC as performance metrics}
+
+   \subfloat[GAT \label{fig:aucpr_roc_gat_iref}]{%
+      \includegraphics[width=\textwidth]{images/apendice/aucpr_roc_gat_iref.pdf}}
+\hspace{\fill}
+   \subfloat[GCN \label{fig:aucpr_roc_gcn_iref} ]{%
+      \includegraphics[width=\textwidth]{images/apendice/aucpr_roc_gcn_iref.pdf}}
+\hspace{\fill}
+   \subfloat[GraphSAGE \label{fig:aucpr_roc_sage_iref}]{%
+      \includegraphics[width=\textwidth]{images/apendice/aucpr_roc_sage_iref.pdf}}\\
+
+\label{fig:aucpr_roc_iref}
+\end{figure*}
+
+
+
+
+\begin{figure*}[!ht]
+\centering
+
+\caption{Loss curve for the GAT (left column), GCN (middle column), and GraphSAGE (right column) models in (a) HPRD, (b) MULTINET and (c) IREF PPI networks.}
+
+   \subfloat[HPRD \label{fig:loss_hprd}]{%
+      \includegraphics[width=\textwidth]{images/testes/loss_hprd.pdf}}
+\hspace{\fill}
+   \subfloat[MULTINET \label{fig:loss_multinet} ]{%
+      \includegraphics[width=\textwidth]{images/testes/loss_multinet.pdf}}
+\hspace{\fill}
+   \subfloat[IREF \label{fig:loss_iref}]{%
+      \includegraphics[width=\textwidth]{images/testes/loss_iref.pdf}}\\
+
+\label{fig:loss_allcomparation}
+\end{figure*}
+
+
+
+
+
+
+\begin{table}[!th]
+\caption{Experiments for three traditional algorithms in HPRD network (mean used for the metrics presented, from test data) \label{tab:completa_trad_hprd}}
+\centering
+\begin{tabular}{lccccc}
+\hline
+                           & \multicolumn{5}{c}{SVM}                          \\ \cline{2-6} 
+                           & Accuracy & Precision & Recall & AUC-ROC & AUC-PR \\
+Mutations                  & 0.8701   & 0.7399    & 0.1172 & 0.5877  & 0.3272 \\
+CNA                        & 0.8600   & 0.2000    & 0.0025 & 0.5297  & 0.1950 \\
+DNA Methylation            & 0.8600   & 0.0000    & 0.0000 & 0.4974  & 0.1435 \\
+Gene Expression            & 0.8600   & 0.0000    & 0.0000 & 0.4777  & 0.1368 \\
+Multi-Omics                & 0.8603   & 0.2000    & 0.0025 & 0.6346  & 0.2595 \\
+Multi-Omics and Centrality & 0.8667   & 0.8512    & 0.0618 & 0.7608  & 0.4477 \\ \cline{2-6} 
+                           & \multicolumn{5}{c}{Random Forest}                \\ \cline{2-6} 
+                           & Accuracy & Precision & Recall & AUC-ROC & AUC-PR \\
+Mutations                  & 0.8699   & 0.6835    & 0.1386 & 0.7031  & 0.3664 \\
+CNA                        & 0.8538   & 0.3411    & 0.0466 & 0.5303  & 0.1702 \\
+DNA Methylation            & 0.8591   & 0.0000    & 0.0000 & 0.5208  & 0.1519 \\
+Gene Expression            & 0.8596   & 0.0000    & 0.0000 & 0.5362  & 0.1559 \\
+Multi-Omics                & 0.8674   & 0.7072    & 0.0945 & 0.7073  & 0.3566 \\
+Multi-Omics and Centrality & 0.8840   & 0.7441    & 0.2672 & 0.8054  & 0.5231 \\ \cline{2-6} 
+                           & \multicolumn{5}{c}{Gradient Boosting Tree}            \\ \cline{2-6} 
+                           & Accuracy & Precision & Recall & AUC-ROC & AUC-PR \\
+Mutations                  & 0.8681   & 0.6217    & 0.1525 & 0.6978  & 0.3753 \\
+CNA                        & 0.8614   & 0.6783    & 0.0214 & 0.5249  & 0.1846 \\
+DNA Methylation            & 0.8582   & 0.0500    & 0.0012 & 0.5225  & 0.1487 \\
+Gene Expression            & 0.8579   & 0.1066    & 0.0025 & 0.5386  & 0.1564 \\
+Multi-Omics                & 0.8671   & 0.6178    & 0.1398 & 0.7015  & 0.3565 \\
+Multi-Omics and Centrality & 0.8861   & 0.7079    & 0.3240 & 0.8174  & 0.5437 \\ \hline
+\end{tabular}
+\end{table}
+
+
+\begin{table}[!th]
+\caption{Experiments for three traditional algorithms in MULTINET network (mean used for the metrics presented, from test data) \label{tab:completa_trad_multinet}}
+\centering
+\begin{tabular}{lccccc}
+\hline
+                           & \multicolumn{5}{c}{SVM}                          \\ \cline{2-6} 
+                           & Accuracy & Precision & Recall & AUC-ROC & AUC-PR \\
+Mutations                  & 0.9129   & 0.7395    & 0.1025 & 0.5667  & 0.2819 \\
+CNA                        & 0.9069   & 0.0000    & 0.0000 & 0.5072  & 0.1247 \\
+DNA Methylation            & 0.9072   & 0.0000    & 0.0000 & 0.5027  & 0.0951 \\
+Gene Expression            & 0.9072   & 0.0000    & 0.0000 & 0.4793  & 0.0997 \\
+Multi-Omics                & 0.9073   & 0.2000    & 0.0011 & 0.6506  & 0.2025 \\
+Multi-Omics and Centrality & 0.9075   & 0.4000    & 0.0034 & 0.7523  & 0.3126 \\ \cline{2-6} 
+                           & \multicolumn{5}{c}{Random Forest}                \\ \cline{2-6} 
+                           & Accuracy & Precision & Recall & AUC-ROC & AUC-PR \\
+Mutations                  & 0.9121   & 0.6589    & 0.1152 & 0.7120  & 0.3066 \\
+CNA                        & 0.9006   & 0.1393    & 0.0126 & 0.5357  & 0.1136 \\
+DNA Methylation            & 0.9070   & 0.0000    & 0.0000 & 0.5466  & 0.1122 \\
+Gene Expression            & 0.9070   & 0.0000    & 0.0000 & 0.5630  & 0.1071 \\
+Multi-Omics                & 0.9111   & 0.6618    & 0.0875 & 0.7238  & 0.2976 \\
+Multi-Omics and Centrality & 0.9193   & 0.7331    & 0.2061 & 0.8193  & 0.4559 \\ \cline{2-6} 
+                           & \multicolumn{5}{c}{Gradient Boosting Tree}            \\ \cline{2-6} 
+                           & Accuracy & Precision & Recall & AUC-ROC & AUC-PR \\
+Mutations                  & 0.9114   & 0.6098    & 0.1325 & 0.7228  & 0.3212 \\
+CNA                        & 0.9053   & 0.4438    & 0.0115 & 0.5469  & 0.1169 \\
+DNA Methylation            & 0.9062   & 0.1666    & 0.0023 & 0.5513  & 0.1089 \\
+Gene Expression            & 0.9065   & 0.0000    & 0.0000 & 0.5803  & 0.1151 \\
+Multi-Omics                & 0.9092   & 0.5534    & 0.1210 & 0.7294  & 0.3066 \\
+Multi-Omics and Centrality & 0.9166   & 0.6299    & 0.2442 & 0.8295  & 0.4505 \\ \hline
+\end{tabular}
+\end{table}
+
+
+\begin{table}[!th]
+\caption{Experiments for three traditional algorithms in IREF network (mean used for the metrics presented, from test data) \label{tab:completa_trad_iref}}
+\centering
+\begin{tabular}{lccccc}
+\hline
+                           & \multicolumn{5}{c}{SVM}                          \\ \cline{2-6} 
+                           & Accuracy & Precision & Recall & AUC-ROC & AUC-PR \\
+Mutations                  & 0.9148   & 0.7288    & 0.0938 & 0.5714  & 0.2598 \\
+CNA                        & 0.9098   & 0.0000    & 0.0000 & 0.5131  & 0.1204 \\
+DNA Methylation            & 0.9100   & 0.0000    & 0.0000 & 0.5161  & 0.0969 \\
+Gene Expression            & 0.9100   & 0.0000    & 0.0000 & 0.4833  & 0.0906 \\
+Multi-Omics                & 0.9101   & 0.2000    & 0.0011 & 0.6433  & 0.1958 \\
+Multi-Omics and Centrality & 0.9101   & 0.2000    & 0.0011 & 0.7060  & 0.2368 \\ \cline{2-6} 
+                           & \multicolumn{5}{c}{Random Forest}                \\ \cline{2-6} 
+                           & Accuracy & Precision & Recall & AUC-ROC & AUC-PR \\
+Mutations                  & 0.9139   & 0.6549    & 0.1064 & 0.7084  & 0.2929 \\
+CNA                        & 0.9041   & 0.1731    & 0.0182 & 0.5714  & 0.1201 \\
+DNA Methylation            & 0.9100   & 0.0000    & 0.0000 & 0.5227  & 0.1023 \\
+Gene Expression            & 0.9098   & 0.0000    & 0.0000 & 0.5448  & 0.1016 \\
+Multi-Omics                & 0.9131   & 0.6950    & 0.0697 & 0.7160  & 0.2869 \\
+Multi-Omics and Centrality & 0.9181   & 0.7262    & 0.1476 & 0.8006  & 0.4052 \\ \cline{2-6} 
+                           & \multicolumn{5}{c}{Gradient Boosting Tree}            \\ \cline{2-6} 
+                           & Accuracy & Precision & Recall & AUC-ROC & AUC-PR \\
+Mutations                  & 0.9127   & 0.5832    & 0.1155 & 0.7245  & 0.3087 \\
+CNA                        & 0.9103   & 0.6833    & 0.0114 & 0.5705  & 0.1268 \\
+DNA Methylation            & 0.9090   & 0.1066    & 0.0022 & 0.5398  & 0.1044 \\
+Gene Expression            & 0.9087   & 0.0000    & 0.0000 & 0.5607  & 0.1077 \\
+Multi-Omics                & 0.9129   & 0.5907    & 0.1167 & 0.7285  & 0.3029 \\
+Multi-Omics and Centrality & 0.9187   & 0.6421    & 0.2231 & 0.8233  & 0.4230 \\ \hline
+\end{tabular}
+\end{table}
+
+
+\begin{figure*}[!ht]
+\centering
+
+\caption{Training and validation for the Neural Network algorithm in (a) HPRD, (b) MULTINET and (c) IREF using 300 epochs and AUC-PR and AUC-ROC as performance metrics}
+
+   \subfloat[HPRD \label{fig:aucpr_roc_hprd_nn}]{%
+      \includegraphics[width=\textwidth]{images/apendice/aucpr_roc_hprd_nn.pdf}}
+\hspace{\fill}
+   \subfloat[MULTINET \label{fig:aucpr_roc_multinet_nn} ]{%
+      \includegraphics[width=\textwidth]{images/apendice/aucpr_roc_multinet_nn.pdf}}
+\hspace{\fill}
+   \subfloat[IREF \label{fig:aucpr_roc_iref_nn}]{%
+      \includegraphics[width=\textwidth]{images/apendice/aucpr_roc_iref_nn.pdf}}\\
+
+\label{fig:aucpr_roc_nn}
+\end{figure*}
+
+
+
+% \begin{figure*}[!ht]
+% \centering
+
+% \caption{Test set cross entropy performance of (a) MULTINET and (b) IREF networks}
+
+%   \subfloat[MULTINET \label{fig:multinet_features_aucpr}]{%
+%       \includegraphics[width=0.95\textwidth]{images/apendice/multinet_features_aucpr.pdf}}
+% \hspace{\fill}
+%   \subfloat[IREF \label{fig:iref_features_aucpr}]{%
+%       \includegraphics[width=0.95\textwidth]{images/apendice/iref_features_aucpr.pdf}}\\
+
+% \label{fig:multinet_iref_features_aucpr}
+% \end{figure*}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\chapter{Additional results for the development of GCN-based models for predicting CDGs}
+\label{sec:appendix_cap6}
+
+% width=0.75 é o melhor tamanho para os boxplot
+% width=0.80 é o melhor tamanho para os lollipop
+This appendix provides additional results for the experiments reported in Chapter~\ref{sec:gcn_model}, which aim to train predictive models based on the GCN algorithm for the identification of CDGs.
+
+
+
+
+
+\begin{table}[!th]
+\caption{Occurrence of hyperparameters in the results according to different thresholds for the HPRD network \label{tab:occurrence_hyperparameters_hprd}}
+\centering
+ \begin{adjustbox}{scale=0.9,center}
+
+\begin{tabular}{llllllllllll}
+\hline
+\multicolumn{12}{c}{AUC-PR \textgreater 0.2 (556 parameter combinations)}                                                                                                                                \\ \hline
+\multicolumn{2}{c}{Activation} & \multicolumn{2}{c}{Dropout} & \multicolumn{2}{c}{Loss (alpha)} & \multicolumn{2}{c}{Loss (gamma)} & \multicolumn{2}{c}{Layer sizes} & \multicolumn{2}{c}{Learning rate} \\
+ReLU          & 49.6\%         & 0.001        & 33.2\%       & 0.25           & 14.0\%          & 0             & 23.7\%           & 64            & 30.7\%          & 0.00001          & 14.0\%         \\
+ELU           & 50.3\%         & 0.01         & 33.2\%       & 0.5            & 20.1\%          & 0.5           & 23.9\%           & 128           & 32.5\%          & 0.0001           & 34.1\%         \\
+              &                & 0.1          & 33.4\%       & 0.75           & 26.9\%          & 1             & 24.8\%           & 256           & 36.6\%          & 0.001            & 51.7\%         \\
+              &                &              &              & 0.9            & 38.8\%          & 2             & 27.5\%           &               &                 &                  &                \\
+              &                &              &              &                &                 &               &                  &               &                 &                  &                \\ \hline
+\multicolumn{12}{c}{AUC-PR \textgreater 0.4 (457 parameter combinations)}                                                                                                                                \\ \hline
+\multicolumn{2}{c}{Activation} & \multicolumn{2}{c}{Dropout} & \multicolumn{2}{c}{Loss (alpha)} & \multicolumn{2}{c}{Loss (gamma)} & \multicolumn{2}{c}{Layer sizes} & \multicolumn{2}{c}{Learning rate} \\
+ReLU          & 50.1\%         & 0.001        & 33.4\%       & 0.25           & 15.7\%          & 0             & 23.6\%           & 64            & 31.5\%          & 0.00001          & 0.8\%          \\
+ELU           & 49.8\%         & 0.01         & 33.2\%       & 0.5            & 20.3\%          & 0.5           & 24.2\%           & 128           & 32.8\%          & 0.0001           & 36.1\%         \\
+              &                & 0.1          & 33.2\%       & 0.75           & 31.5\%          & 1             & 25.1\%           & 256           & 35.6\%          & 0.001            & 63.0\%         \\
+              &                &              &              & 0.9            & 32.3\%          & 2             & 26.9\%           &               &                 &                  &                \\
+              &                &              &              &                &                 &               &                  &               &                 &                  &                \\ \hline
+\multicolumn{12}{c}{AUC-PR \textgreater 0.53 (97 parameter combinations)}                                                                                                                                \\ \hline
+\multicolumn{2}{c}{Activation} & \multicolumn{2}{c}{Dropout} & \multicolumn{2}{c}{Loss (alpha)} & \multicolumn{2}{c}{Loss (gamma)} & \multicolumn{2}{c}{Layer sizes} & \multicolumn{2}{c}{Learning rate} \\
+ReLU          & 84.5\%         & 0.001        & 24.7\%       & 0.25           & 36.0\%          & 0             & 22.6\%           & 64            & 39.1\%          & 0.00001          & 0.0\%          \\
+ELU           & 15.4\%         & 0.01         & 27.8\%       & 0.5            & 22.6\%          & 0.5           & 27.8\%           & 128           & 30.9\%          & 0.0001           & 9.2\%          \\
+              &                & 0.1          & 47.4\%       & 0.75           & 23.7\%          & 1             & 27.8\%           & 256           & 29.8\%          & 0.001            & 90.7\%         \\
+              &                &              &              & 0.9            & 17.5\%          & 2             & 21.6\%           &               &                 &                  &                \\ \hline
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+
+
+
+\begin{table}[!th]
+\caption{Occurrence of hyperparameters in the results according to different thresholds for the MULTINET network \label{tab:occurrence_hyperparameters_multinet}}
+\centering
+ \begin{adjustbox}{scale=0.9,center}
+
+\begin{tabular}{llllllllllll}
+\hline
+\multicolumn{12}{c}{AUC-PR \textgreater 0.2 (506 parameter combinations)}                                                                                                                                \\ \hline
+\multicolumn{2}{c}{Activation} & \multicolumn{2}{c}{Dropout} & \multicolumn{2}{c}{Loss (alpha)} & \multicolumn{2}{c}{Loss (gamma)} & \multicolumn{2}{c}{Layer sizes} & \multicolumn{2}{c}{Learning rate} \\
+ReLU          & 49.2\%         & 0.001        & 33.4\%       & 0.25           & 14.2\%          & 0             & 23.7\%           & 64            & 31.4\%          & 0.00001          & 14.2\%         \\
+ELU           & 50.7\%         & 0.01         & 33.4\%       & 0.5            & 16.4\%          & 0.5           & 24.3\%           & 128           & 33.5\%          & 0.0001           & 28.8\%         \\
+              &                & 0.1          & 33.2\%       & 0.75           & 26.6\%          & 1             & 25.4\%           & 256           & 34.9\%          & 0.001            & 56.9\%         \\
+              &                &              &              & 0.9            & 42.6\%          & 2             & 26.4\%           &               &                 &                  &                \\
+              &                &              &              &                &                 &               &                  &               &                 &                  &                \\ \hline
+\multicolumn{12}{c}{AUC-PR \textgreater 0.4 (162 parameter combinations)}                                                                                                                                \\ \hline
+\multicolumn{2}{c}{Activation} & \multicolumn{2}{c}{Dropout} & \multicolumn{2}{c}{Loss (alpha)} & \multicolumn{2}{c}{Loss (gamma)} & \multicolumn{2}{c}{Layer sizes} & \multicolumn{2}{c}{Learning rate} \\
+ReLU          & 89.5\%         & 0.001        & 33.9\%       & 0.25           & 22.8\%          & 0             & 20.3\%           & 64            & 27.1\%          & 0.00001          & 0.0\%          \\
+ELU           & 10.4\%         & 0.01         & 33.3\%       & 0.5            & 26.5\%          & 0.5           & 23.4\%           & 128           & 30.8\%          & 0.0001           & 3.1\%          \\
+              &                & 0.1          & 32.7\%       & 0.75           & 25.3\%          & 1             & 28.3\%           & 256           & 41.9\%          & 0.001            & 96.9\%         \\
+              &                &              &              & 0.9            & 25.3\%          & 2             & 27.7\%           &               &                 &                  &                \\
+              &                &              &              &                &                 &               &                  &               &                 &                  &                \\ \hline
+\multicolumn{12}{c}{AUC-PR \textgreater 0.46 (89 parameter combinations)}                                                                                                                                \\ \hline
+\multicolumn{2}{c}{Activation} & \multicolumn{2}{c}{Dropout} & \multicolumn{2}{c}{Loss (alpha)} & \multicolumn{2}{c}{Loss (gamma)} & \multicolumn{2}{c}{Layer sizes} & \multicolumn{2}{c}{Learning rate} \\
+ReLU          & 100\%          & 0.001        & 35.9\%       & 0.25           & 17.9\%          & 0             & 17.9\%           & 64            & 12.3\%          & 0.00001          & 0.0\%          \\
+ELU           & 0.0\%          & 0.01         & 34.8\%       & 0.5            & 28.0\%          & 0.5           & 22.4\%           & 128           & 40.4\%          & 0.0001           & 0.0\%          \\
+              &                & 0.1          & 29.2\%       & 0.75           & 34.8\%          & 1             & 26.9\%           & 256           & 47.1\%          & 0.001            & 100\%          \\
+              &                &              &              & 0.9            & 19.1\%          & 2             & 32.5\%           &               &                 &                  &                \\ \hline
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+
+
+
+\begin{table}[!th]
+\caption{Occurrence of hyperparameters in the results according to different thresholds for the IREF network \label{tab:occurrence_hyperparameters_iref}}
+\centering
+ \begin{adjustbox}{scale=0.9,center}
+ 
+\begin{tabular}{llllllllllll}
+\hline
+\multicolumn{12}{c}{AUC-PR \textgreater 0.2 (497 parameter combinations)}                                                                                                                                \\ \hline
+\multicolumn{2}{c}{Activation} & \multicolumn{2}{c}{Dropout} & \multicolumn{2}{c}{Loss (alpha)} & \multicolumn{2}{c}{Loss (gamma)} & \multicolumn{2}{c}{Layer sizes} & \multicolumn{2}{c}{Learning rate} \\
+ReLU          & 49.1\%         & 0.001        & 33.4\%       & 0.25           & 14.3\%          & 0             & 23.5\%           & 64            & 31.0\%          & 0.00001          & 14.5\%         \\
+ELU           & 50.9\%         & 0.01         & 33.2\%       & 0.5            & 16.3\%          & 0.5           & 24.3\%           & 128           & 33.4\%          & 0.0001           & 27.8\%         \\
+              &                & 0.1          & 33.4\%       & 0.75           & 26.0\%          & 1             & 25.6\%           & 256           & 35.6\%          & 0.001            & 57.7\%         \\
+              &                &              &              & 0.9            & 43.5\%          & 2             & 26.6\%           &               &                 &                  &                \\
+              &                &              &              &                &                 &               &                  &               &                 &                  &                \\ \hline
+\multicolumn{12}{c}{AUC-PR \textgreater 0.4 (279 parameter combinations)}                                                                                                                                \\ \hline
+\multicolumn{2}{c}{Activation} & \multicolumn{2}{c}{Dropout} & \multicolumn{2}{c}{Loss (alpha)} & \multicolumn{2}{c}{Loss (gamma)} & \multicolumn{2}{c}{Layer sizes} & \multicolumn{2}{c}{Learning rate} \\
+ReLU          & 63.4\%         & 0.001        & 34.1\%       & 0.25           & 17.9\%          & 0             & 21.1\%           & 64            & 23.3\%          & 0.00001          & 0.0\%          \\
+ELU           & 36.6\%         & 0.01         & 31.9\%       & 0.5            & 24.0\%          & 0.5           & 24.4\%           & 128           & 35.5\%          & 0.0001           & 12.9\%         \\
+              &                & 0.1          & 34.1\%       & 0.75           & 29.0\%          & 1             & 25.4\%           & 256           & 41.2\%          & 0.001            & 87.1\%         \\
+              &                &              &              & 0.9            & 29.0\%          & 2             & 29.0\%           &               &                 &                  &                \\
+              &                &              &              &                &                 &               &                  &               &                 &                  &                \\ \hline
+\multicolumn{12}{c}{AUC-PR \textgreater 0.474 (92 parameter combinations)}                                                                                                                               \\ \hline
+\multicolumn{2}{c}{Activation} & \multicolumn{2}{c}{Dropout} & \multicolumn{2}{c}{Loss (alpha)} & \multicolumn{2}{c}{Loss (gamma)} & \multicolumn{2}{c}{Layer sizes} & \multicolumn{2}{c}{Learning rate} \\
+ReLU          & 100\%          & 0.001        & 35.8\%       & 0.25           & 21.7\%          & 0             & 21.7\%           & 64            & 21.8\%          & 0.00001          & 0.0\%          \\
+ELU           & 0.0\%          & 0.01         & 32.6\%       & 0.5            & 28.2\%          & 0.5           & 27.1\%           & 128           & 39.1\%          & 0.0001           & 0.0\%          \\
+              &                & 0.1          & 31.5\%       & 0.75           & 29.3\%          & 1             & 23.9\%           & 256           & 39.1\%          & 0.001            & 100\%          \\
+              &                &              &              & 0.9            & 20.6\%          & 2             & 27.1\%           &               &                 &                  &                \\ \hline
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{figure*}[!ht]
+\centering
+
+\caption{Performance analysis of all hyperparameter combinations for the (a) MULTINET and (b) IREF networks.}
+
+   \subfloat[MULTINET \label{fig:val_lollipop_multinet} ]{%
+      \includegraphics[width=0.80\textwidth]{images/apendice/val_lollipop_multinet.pdf}}
+\hspace{\fill}
+   \subfloat[IREF \label{fig:val_lollipop_iref}]{%
+      \includegraphics[width=0.80\textwidth]{images/apendice/val_lollipop_iref.pdf}}\\
+
+\label{fig:val_lollipop_multinet_iref}
+\end{figure*}
+
+
+\begin{figure*}[!ht]
+\centering
+
+\caption{Performance analysis of all hyperparameter combinations for the (a) CPDB and (b) PCNET networks.}
+
+   \subfloat[CPDB \label{fig:val_lollipop_cpdb} ]{%
+      \includegraphics[width=0.80\textwidth]{images/apendice/val_lollipop_cpdb.pdf}}
+\hspace{\fill}
+   \subfloat[PCNET \label{fig:val_lollipop_pcnet}]{%
+      \includegraphics[width=0.80\textwidth]{images/apendice/val_lollipop_pcnet.pdf}}\\
+
+\label{fig:val_lollipop_cpdb_pcnet}
+\end{figure*}
+
+
+
+
+\begin{figure*}[!ht]
+\centering
+
+\caption{Training and validation performance for (a) HPRD, (b) IREF, and (c) CPDB. AUC-PR and AUC-ROC values are shown in the left and righ column, respectively}
+
+   \subfloat[HPRD \label{aucpr_roc_hprd}]{%
+      \includegraphics[width=\textwidth]{images/apendice/aucpr_roc_hprd.pdf}}
+\hspace{\fill}
+   \subfloat[IREF \label{aucpr_roc_iref} ]{%
+      \includegraphics[width=\textwidth]{images/apendice/aucpr_roc_iref.pdf}}
+\hspace{\fill}
+   \subfloat[CPDB \label{aucpr_roc_cpdb}]{%
+      \includegraphics[width=\textwidth]{images/apendice/aucpr_roc_cpdb.pdf}}\\
+
+\label{fig:aucpr_roc_worse3}
+\end{figure*}
+
+
+
+
+
+
+
+\begin{figure*}[!ht]
+\centering
+
+\caption{Loss curves for the six PPI networks.}
+
+   \subfloat[HPRD \label{fig:hprd_loss}]{%
+      \includegraphics[width=0.49\textwidth]{images/apendice/hprd_loss.pdf}}
+\hspace{0em}
+   \subfloat[MULTINET \label{fig:multinet_loss} ]{%
+      \includegraphics[width=0.49\textwidth]{images/apendice/multinet_loss.pdf}}
+\hspace{0em}
+   \subfloat[IREF \label{fig:iref_loss}]{%
+      \includegraphics[width=0.49\textwidth]{images/apendice/iref_loss.pdf}}
+\hspace{0em}
+    \subfloat[CPDB \label{fig:cpdb_loss}]{%
+      \includegraphics[width=0.49\textwidth]{images/apendice/cpdb_loss.pdf}}
+\hspace{0em}
+   \subfloat[PCNET \label{fig:pcnet_loss} ]{%
+      \includegraphics[width=0.49\textwidth]{images/apendice/pcnet_loss.pdf}}
+\hspace{0em}
+   \subfloat[STRING \label{fig:string_loss}]{%
+      \includegraphics[width=0.49\textwidth]{images/apendice/string_loss.pdf}}\\
+
+\label{fig:loss_allnetworks}
+\end{figure*}
+
+
+
+
+
+\begin{figure*}[!ht]
+\centering
+
+\caption{Prediction of GCN models trained with (a) HPRD, (b) MULTINET, and (c) IREF networks in the test set.}
+
+   \subfloat[HPRD \label{fig:test_predict_hprd}]{%
+      \includegraphics[width=0.75\textwidth]{images/apendice/test_predict_hprd.pdf}}
+\hspace{\fill}
+   \subfloat[MULTINET \label{fig:test_predict_multinet} ]{%
+      \includegraphics[width=0.75\textwidth]{images/apendice/test_predict_multinet.pdf}}
+\hspace{\fill}
+   \subfloat[IREF \label{fig:test_predict_iref}]{%
+      \includegraphics[width=0.75\textwidth]{images/apendice/test_predict_iref.pdf}}\\
+
+\label{fig:test_pred_samall3}
+\end{figure*}
+
+
+
+
+\begin{figure*}[!ht]
+\centering
+
+\caption{Prediction of GCN models trained with (a) CPDB and (b) PCNET networks in the test set.}
+
+   \subfloat[CPDB \label{fig:test_predict_cpdb} ]{%
+      \includegraphics[width=0.75\textwidth]{images/apendice/test_predict_cpdb.pdf}}
+\hspace{\fill}
+   \subfloat[PCNET \label{fig:test_predict_pcnet}]{%
+      \includegraphics[width=0.75\textwidth]{images/apendice/test_predict_pcnet.pdf}}\\
+
+\label{fig:test_pred_larger2}
+\end{figure*}
+
+
+
+
+
+
+
+\begin{figure*}[!ht]
+\centering
+
+\caption{Cancer driver genes prediction of (a) HPRD, (b) MULTINET and (c) IREF networks}
+
+   \subfloat[HPRD \label{fig:all_predict_hprd}]{%
+      \includegraphics[width=0.75\textwidth]{images/apendice/all_predict_hprd.pdf}}
+\hspace{\fill}
+   \subfloat[MULTINET \label{fig:all_predict_multinet} ]{%
+      \includegraphics[width=0.75\textwidth]{images/apendice/all_predict_multinet.pdf}}
+\hspace{\fill}
+   \subfloat[IREF \label{fig:all_predict_iref}]{%
+      \includegraphics[width=0.75\textwidth]{images/apendice/all_predict_iref.pdf}}\\
+
+\label{fig:pred_samall3}
+\end{figure*}
+
+
+\begin{figure*}[!ht]
+\centering
+
+\caption{Cancer driver genes prediction of (a) CPDB and (b) PCNET networks}
+
+   \subfloat[CPDB \label{fig:all_predict_cpdb} ]{%
+      \includegraphics[width=0.75\textwidth]{images/apendice/all_predict_cpdb.pdf}}
+\hspace{\fill}
+   \subfloat[PCNET \label{fig:all_predict_pcnet}]{%
+      \includegraphics[width=0.75\textwidth]{images/apendice/all_predict_pcnet.pdf}}\\
+
+\label{fig:pred_larger2}
+\end{figure*}
+
+
+
+
+\begin{table}[!bh]
+\centering
+\caption{List of candidate genes unanimously predicted as driver or passenger gene \label{tab:lista_pred_candidates}}
+\begin{tabular}{cc}
+\hline
+\begin{tabular}[c]{@{}c@{}}Candidates predicted \\ unanimously as driver gene\end{tabular} & \begin{tabular}[c]{@{}c@{}}Candidates predicted \\ unanimously as passenger gene\end{tabular} \\ \hline
+XRCC6                                                                                      & DISP3                                                                                         \\
+SP1                                                                                        & DLST                                                                                          \\
+TNFRSF1A                                                                                   & SLC22A5                                                                                       \\
+KAT2B                                                                                      & CASKIN1                                                                                       \\
+HMGB1                                                                                      & SRSF9                                                                                         \\
+TTN                                                                                        & NPHP1                                                                                         \\
+GRB2                                                                                       & DHDDS                                                                                         \\
+VIM                                                                                        & APOBEC2                                                                                       \\
+PTK2B                                                                                      & TMEM43                                                                                        \\
+XRCC5                                                                                      & CDHR2                                                                                         \\
+CHUK                                                                                       & YY1AP1                                                                                        \\
+GHR                                                                                        & LHX4                                                                                          \\
+SHC1                                                                                       & CALCR                                                                                         \\
+PRKCA                                                                                      & C7                                                                                            \\
+HDAC3                                                                                      & RHO                                                                                           \\
+UBE2I                                                                                      & PEX19                                                                                         \\
+KAT2A                                                                                      & CXADR                                                                                         \\
+ACTB                                                                                       & GSTM4                                                                                         \\
+GATA4                                                                                      & RBM7                                                                                          \\
+CDK2                                                                                       & CCN3                                                                                          \\
+ESR2                                                                                       & TPD52                                                                                         \\
+FOS                                                                                        & GCKR                                                                                          \\
+RUNX2                                                                                      & MPZ                                                                                           \\
+PIAS1                                                                                      & PCBP2                                                                                         \\
+RELA                                                                                       & GSTM2                                                                                         \\
+JUP                                                                                        & ZNF41                                                                                         \\
+NCK1                                                                                       & PLRG1                                                                                         \\
+FN1                                                                                        & IDH3A                                                                                         \\
+PTK2                                                                                       & CPNE1                                                                                         \\
+NR3C1                                                                                      & APOL1                                                                                         \\
+HDAC2                                                                                      & BMF                                                                                           \\
+CTNNA1                                                                                     & ACADM                                                                                         \\
+CDK1                                                                                       & MGST2                                                                                         \\ \hline
+\end{tabular}
+\end{table}
+
+
+
+\chapter{Resumo expandido}
+\label{sec:resumoexpandido}
+% \noindent
+% \textbf{Resolução 02/2021 -- Redação de Teses e Dissertações em Inglês}
+% Dissertações de Mestrado e Teses de Doutorado do PPGC, bem como outros
+% trabalhos escritos tais como Proposta de Tese e PEP, poderão ser
+% redigidas em inglês desde que contenham um título e resumo expandido
+% redigidos em português. O resumo expandido deve conter no mínimo duas
+% páginas inteiras, deve aparecer como apêndice e deve conter as
+% principais contribuições e resultados do trabalho.
+
+Identificar os genes e mutações específicas responsáveis pelo crescimento de tumores é um passo crítico para avançar nossa compreensão do câncer e explorar novos caminhos para diagnóstico e tratamento. Apesar da abundância de dados genômicos disponíveis, identificar com precisão genes causadores de câncer (CDG), entre milhões de possíveis mutações somáticas, apresenta um desafio significativo. Abordagens computacionais tornaram-se cada vez mais úteis na identificação de padrões genômicos ligados a fatores causadores de câncer e na construção de modelos para prever eventos causadores. O aprendizado profundo, um subcampo especializado do aprendizado de máquina, provou ser uma ferramenta valiosa em bioinformática, dada sua capacidade de criar e treinar arquiteturas semelhantes à estruturas biológicas. Coletivamente, essas duas subáreas oferecem oportunidades excepcionais para preencher as lacunas remanescentes no campo.
+
+Nosso estudo começou com uma revisão abrangente dos métodos computacionais que empregam técnicas de aprendizado de máquina para detectar mutações e genes causadores de câncer. Esta revisão visa fornecer uma perspectiva integrada da vasta paisagem de dados e algorítmica que envolve esse desafio científico. Examinamos como as soluções anteriores exploraram as interações entre diferentes tipos de dados e algoritmos de aprendizado de máquina e também descrevemos as restrições analíticas atuais. Nosso objetivo é mapear os avanços significativos e detalhes metodológicos de pesquisas anteriores nesta área e identificar direções promissoras para trabalhos futuros.
+
+Com base em nossa revisão de pesquisas anteriores sobre a previsão de CDGs, identificamos um desafio na área de aprendizado de algoritmos baseados em grafos, como as \textit{graph neural networks} (GNN). Portanto, o objetivo principal deste estudo é investigar o potencial de GNNs na previsão de genes causadores de câncer e construir um modelo que possa efetivamente utilizar informações de redes de interação proteína-proteína (PPI) e dados multi-ômicos para identificar padrões relacionados ao CDGs. Para criar um modelo preditivo baseado em grafo a fim de prever CDGs, realizamos uma análise completa de vários aspectos importantes relacionados ao desenvolvimento do modelo. Isso incluiu a coleta de seis redes PPI distintas e dados multi-ômicos, abrangendo 16 tipos diferentes de câncer e quatro níveis de dados ômicos, que foram utilizados como features de nó. Também avaliamos o desempenho de diferentes algoritmos GNNs e estratégias para resolver problemas de desequilíbrio de classe. Além disso, propomos técnicas baseadas em \textit{ensemble} para aumentar a capacidade preditiva de modelos individuais.
+
+Conduzimos uma série de experimentos para obter informações sobre o desempenho geral dos algoritmos GNN na previsão de genes condutores. Além de comparar três modelos baseados em grafos para três redes PPI distintas, também comparamos diferentes estratégias para definir vetores de features de instância e mitigar o desequilíbrio de classes. Além disso, comparamos os algoritmos GNN com quatro algoritmos tradicionais de aprendizado de máquina. 
+
+Nossos resultados indicaram que entre as GNNs testadas, o algoritmo \textit{graph convolutional network} (GCN) demonstrou os resultados mais promissores, exibindo desempenho consistente e robusto em todos os cenários avaliados. Nossas descobertas também indicam que os algoritmos tradicionais de aprendizado de máquina são altamente sensíveis ao tipo de dados ômicos usados e tendem a ter um desempenho melhor ao incorporar informações de mutação. Além disso, observamos que medidas de centralidade de nó calculadas a partir de redes PPI podem ser altamente informativas e vantajosas para a tarefa de previsão, mesmo para algoritmos que não são baseados em grafos. Com base nessas descobertas, selecionamos o algoritmo GCN para um estudo mais abrangente e como o foco principal de nosso estudo para prever CDGs, dada sua eficácia em diferentes cenários.
+
+Por fim, conduzimos uma investigação completa para determinar as combinações ideais de hiperparâmetros para todas as seis redes selecionadas. Em seguida, relatamos o desempenho do treinamento usando um conjunto de teste compartilhado em todas as redes, permitindo-nos realizar diferentes estratégias de comparação. Primeiramente, comparamos uma rede que agrega todas as redes coletadas com seus respectivos desempenhos individuais. E posteriormente utilizamos duas estratégias de aprendizado \textit{ensemble} que consiste em agregação dos rótulos preditos, por votação majoritária, e por combinação de probabilidades de predição, através da média. A rede unificada não superou as redes individuais, e as estratégias de aprendizado \textit{ensemble} se mostraram eficazes ao superar o desempenho de todas as redes coletadas.
+
+Nas predições finais, apresentamos uma lista de genes não rotulados que foram previstos como potenciais CDGs, que foram unanimemente preditos por todas as seis redes, a rede unificada e a estratégia de aprendizagem \textit{ensemble}. Embora inúmeros desafios permaneçam, nossos resultados promissores sugerem direções valiosas para incorporar centralidades de rede como informações cruciais e a implementação de aprendizado \textit{ensemble} em GNNs.
+
+
+\end{document}

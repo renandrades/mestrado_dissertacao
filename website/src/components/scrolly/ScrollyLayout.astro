@@ -1,0 +1,46 @@
+---
+import type { ChartConfig } from '../../charts/types';
+import { chartRegistry } from '../../charts/registry';
+import ScrollySection from './ScrollySection.astro';
+import StickyVizColumn from './StickyVizColumn.astro';
+
+interface RenderedSection {
+  sectionId: string;
+  chartId: string | null;
+  Content: any;
+}
+
+interface Props {
+  sections: RenderedSection[];
+}
+
+const { sections } = Astro.props;
+
+const seen = new Set<string>();
+const charts: ChartConfig[] = [];
+for (const section of sections) {
+  if (!section.chartId || seen.has(section.chartId)) continue;
+  const config = chartRegistry[section.chartId];
+  if (config) {
+    charts.push(config);
+    seen.add(section.chartId);
+  }
+}
+---
+
+<div class="scrolly-layout">
+  <div class="scrolly-narrative">
+    {
+      sections.map((section) => (
+        <ScrollySection
+          sectionId={section.sectionId}
+          chartId={section.chartId}
+          chartConfig={section.chartId ? (chartRegistry[section.chartId] ?? null) : null}
+        >
+          <section.Content />
+        </ScrollySection>
+      ))
+    }
+  </div>
+  <StickyVizColumn charts={charts} />
+</div>
