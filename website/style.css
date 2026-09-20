@@ -1,0 +1,1201 @@
+/* ==========================================================================
+   Dissertation scrollytelling site — vanilla HTML/CSS/JS rebuild.
+
+   Palette: solid, flat "aged paper" light theme (no gradients, no OS-driven
+   dark mode). Categorical chart colors are a fixed convention used
+   consistently across every chart on the page — never reassigned per-chart:
+     slot 1 (blue)    -> "passenger" genes
+     slot 2 (orange)  -> "driver" genes / "the ensemble result" (the winning
+                         approach, wherever a chart highlights it)
+     muted gray       -> "unlabeled" genes / "the ordinary/individual result"
+     slot 3 (teal)    -> GAT        slot 4 (amber)   -> GCN
+     slot 5 (pink)    -> GraphSAGE  slot 6 (green)   -> GBT
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  --paper: #f5f5f0;
+  --surface: #ffffff;
+  --surface-muted: #ececE4;
+  --ink: #1a1a1a;
+  --ink-secondary: #4a4a45;
+  --text-muted: #83817a;
+  --gridline: #e2e0d6;
+  --baseline: #cac7b8;
+  --border-hairline: rgba(26, 26, 26, 0.12);
+
+  --series-passenger: #2a78d6;
+  --series-driver: #eb6834;
+  --series-unlabeled: #898781;
+  --series-gat: #1baf7a;
+  --series-gcn: #eda100;
+  --series-graphsage: #e87ba4;
+  --series-gbt: #008300;
+  --series-individual: var(--series-unlabeled);
+  --series-ensemble: var(--series-driver);
+
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --header-h: 3.5rem;
+  --content-max: 1360px;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ---------------------------------- reset --------------------------------- */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+html, body { margin: 0; padding: 0; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  font-size: 17px;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5 { line-height: 1.15; font-weight: 700; margin: 0 0 0.6em; }
+p { margin: 0 0 1.1em; color: var(--ink-secondary); }
+em { color: var(--ink); font-style: italic; }
+strong { color: var(--ink); font-weight: 700; }
+a { color: inherit; }
+ul, ol, dl { margin: 0; padding: 0; }
+button { font: inherit; }
+
+/* Every section that's a scroll target — nav-dot clicks, hash links, and
+   our own scrollIntoView() calls all respect this — needs this much
+   clearance, or its top content lands directly under the fixed header. */
+[id] { scroll-margin-top: var(--header-h); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
+/* ================================ HEADER ================================= */
+
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: var(--header-h);
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.site-header-inner {
+  height: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 0 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.site-header-title {
+  font-weight: 700;
+  font-size: 0.98rem;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.section-dots ul {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.section-dots a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+
+.section-dots .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid var(--baseline);
+  background: transparent;
+  display: block;
+  transition: background 200ms ease, border-color 200ms ease, transform 200ms ease;
+}
+
+.section-dots a:hover .dot { border-color: var(--ink); }
+
+.section-dots a.is-active .dot {
+  background: var(--series-driver);
+  border-color: var(--series-driver);
+  transform: scale(1.4);
+}
+
+/* progress bar: a thin strip fixed to the header's own bottom edge */
+.scroll-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--border-hairline);
+}
+
+.scroll-progress-fill {
+  height: 100%;
+  width: 100%;
+  background: var(--ink);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+@media (max-width: 760px) {
+  .section-dots { display: none; }
+}
+
+@media (max-width: 480px) {
+  /* The English wordmark is long and required verbatim — on very narrow
+     phones it no longer fits one line even with the dots already hidden,
+     so let it wrap and grow the header (every offset elsewhere reads from
+     this same --header-h token, so raising it here keeps every sticky/
+     scroll-margin/padding calculation correct without touching them). */
+  :root { --header-h: 5.75rem; }
+  .site-header-title { white-space: normal; font-size: 0.85rem; line-height: 1.3; }
+}
+
+/* ================================= HERO =================================== */
+
+.hero {
+  min-height: 100vh;
+  padding-top: var(--header-h);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+}
+
+.hero-inner { max-width: 880px; padding: 2rem 1.75rem; }
+
+.hero-tag {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--series-driver);
+  margin-bottom: 1.4rem;
+}
+
+.hero-title {
+  /* Calibrated, not guessed: measured this exact string's rendered width
+     at a known font-size (Inter/system-ui, bold, -0.02em tracking) and
+     solved for the font-size that fills .hero-inner's own available width
+     (max-width: 880px minus its 1.75rem side padding = 824px) with a ~2%
+     margin, at every viewport down to a 320px floor. The previous
+     vw-based clamp's 5rem ceiling was simply wider than the container at
+     normal desktop widths, which is why it wrapped even at 1440px.
+     white-space: nowrap is the actual line-break guarantee; the clamp is
+     what keeps that single line from overflowing or getting cut off. */
+  font-size: clamp(1rem, calc((min(100vw, 880px) - 56px) * 0.066), 3.4rem);
+  white-space: nowrap;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+}
+
+.hero-subtitle {
+  /* Same measured-width calibration as .hero-title, against this string's
+     own (longer, regular-weight) rendered width — independently solved so
+     it also never wraps, while its ceiling (1.05rem) stays well under the
+     title's for visual hierarchy. max-width is dropped: a ch-based wrap
+     width has no purpose once the line is forced not to wrap. */
+  font-size: clamp(0.5rem, calc((min(100vw, 880px) - 56px) * 0.0204), 1.05rem);
+  white-space: nowrap;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  margin: 0 auto 1.4rem;
+}
+
+.hero-byline {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 1.6rem;
+}
+
+.hero-intro {
+  font-size: 1.2rem;
+  max-width: 62ch;
+  margin: 0 auto 3rem;
+}
+
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.5rem 1rem;
+  border-top: 1px solid var(--border-hairline);
+  padding-top: 2.25rem;
+}
+
+.hero-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* flex-start, not center: some labels now wrap to 2 lines (via <br>) and
+     others stay on 1 — centering each cell's own dt+dd block independently
+     would put the number at a DIFFERENT y per cell (whatever makes ITS OWN,
+     differently-sized block centered in the shared grid row height). Top-
+     aligning instead pins every dt to the same y regardless of how tall its
+     own dd ends up, which is what "all numbers on one shared baseline" means. */
+  justify-content: flex-start;
+  text-align: center;
+  width: 100%;
+}
+
+.hero-stat-value {
+  /* dt/dd have no margin reset above (that rule only targets dl itself) —
+     dd in particular gets a UA-stylesheet margin-inline-start by default,
+     which would offset the label sideways from the number above it despite
+     align-items:center on the flex column. Reset both explicitly so the
+     number and its label share the exact same centered axis. */
+  margin: 0;
+  width: 100%;
+  font-size: clamp(1.9rem, 3.4vw, 2.6rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.hero-stat-label {
+  margin: 0.3rem 0 0;
+  width: 100%;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.scroll-cue {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 3rem auto 0;
+  text-decoration: none;
+}
+
+.scroll-cue-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-muted);
+  background: none;
+  transition: border-color 200ms ease;
+}
+
+.scroll-cue:hover .scroll-cue-circle { border-color: var(--ink); }
+
+.scroll-cue-arrow {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  animation: cue-bob 1.6s ease-in-out infinite alternate;
+}
+
+@keyframes cue-bob {
+  from { transform: translateY(0); }
+  to { transform: translateY(8px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-cue-arrow { animation: none; }
+}
+
+/* ============================ SCROLLYTELLING ============================== */
+
+.scrolly {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 0 1.75rem;
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 3rem;
+}
+
+.scrolly-step {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4rem 0;
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 700ms var(--ease), transform 700ms var(--ease);
+}
+
+.scrolly-step.is-revealed { opacity: 1; transform: translateY(0); }
+
+.scrolly-step h2 { font-size: clamp(1.7rem, 2.6vw, 2.3rem); margin-bottom: 1rem; }
+.scrolly-step p { font-size: 1.08rem; max-width: 54ch; }
+
+.scrolly-visual { position: relative; }
+
+.visual-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: block;
+}
+
+.visual-panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* safe-center: same vertical centering for charts that fit, but falls
+     back to top-aligned (fully scrollable, nothing clipped) the moment a
+     dense chart's content is taller than the 100vh panel — plain `center`
+     would clip content on BOTH edges in that case, with the top portion
+     unreachable even via overflow-y:auto (a well-known flexbox pitfall).
+     The unsupported-value fallback here is intentional: browsers without
+     safe-center simply keep the `center` declared just above. */
+  justify-content: safe-center;
+  padding: 2.5rem 1rem 2.5rem 2.5rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 500ms ease, transform 500ms ease;
+  transform: translateY(10px) scale(0.99);
+  overflow-y: auto;
+}
+
+.visual-panel.is-active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.visual-title {
+  font-size: 1.15rem;
+  color: var(--ink);
+  margin-bottom: 1.75rem;
+  flex-shrink: 0;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  list-style: none;
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--ink-secondary);
+  flex-shrink: 0;
+}
+
+.chart-legend li { display: inline-flex; align-items: center; gap: 0.45rem; }
+
+.swatch {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  background: var(--c, currentColor);
+  flex-shrink: 0;
+}
+
+.swatch.outline { background: transparent; border: 2px solid var(--c, currentColor); }
+.swatch.diamond { border-radius: 0; transform: rotate(45deg); width: 8px; height: 8px; }
+
+.chart-note {
+  margin-top: 0.85rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  max-width: 42ch;
+}
+
+/* Single shared floating tooltip, reused by every chart on the page —
+   created once (see ensureTooltip() in script.js), repositioned near the
+   cursor on every hover. */
+.viz-tooltip {
+  position: fixed;
+  z-index: 200;
+  pointer-events: none;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--border-hairline);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  box-shadow: 0 10px 26px rgba(26, 26, 26, 0.14);
+  opacity: 0;
+  transition: opacity 120ms ease;
+  max-width: 220px;
+}
+
+.viz-tooltip.is-visible { opacity: 1; }
+
+.viz-tooltip .tooltip-value {
+  font-weight: 800;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.viz-tooltip .tooltip-label {
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+@media (max-width: 900px) {
+  .scrolly { grid-template-columns: 1fr; gap: 0; }
+  .scrolly-visual { order: -1; position: static; }
+  .visual-sticky { position: static; height: 62vh; margin: 0 -1.75rem; border-bottom: 1px solid var(--border-hairline); }
+  .scrolly-step { min-height: auto; padding: 2.75rem 0; }
+}
+
+/* ============================== BAR CHARTS ================================ */
+/* Shared "label — track — value" primitive reused by every bar-based chart:
+   labels are always plain horizontal text (flex row), never rotated. */
+
+.bar-chart { width: 100%; }
+
+.bar-group + .bar-group { margin-top: 1.1rem; }
+
+.bar-group-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 0.45rem;
+}
+
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.4rem;
+}
+
+.bar-row-label {
+  flex: 0 0 108px;
+  font-size: 0.82rem;
+  color: var(--ink-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.bar-row-label .swatch { flex-shrink: 0; }
+
+.bar-row-track {
+  flex: 1 1 auto;
+  height: 16px;
+  background: var(--gridline);
+  border-radius: 5px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  cursor: pointer;
+}
+
+.bar-row-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 5px;
+  background: var(--series-passenger);
+  transition: width 900ms var(--ease);
+}
+
+.bar-row-fill.muted { background: var(--baseline); }
+
+.bar-row-value {
+  flex: 0 0 60px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  text-align: left;
+}
+
+/* stacked variant (class-imbalance): several segments inside one track */
+.bar-segment {
+  height: 100%;
+  width: 0%;
+  transition: width 900ms var(--ease);
+  flex-shrink: 0;
+}
+
+.reveal-bar { opacity: 1; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-bar { opacity: 0; transform: scaleY(0); transform-origin: bottom; transition: opacity 550ms ease, transform 550ms ease; }
+  .reveal-bar.is-revealed { opacity: 1; transform: scaleY(1); }
+}
+
+/* ============================ VERTICAL BAR CHART =========================== */
+/* Used only by the class-imbalance chart ("Uma agulha genômica no
+   palheiro") — every other bar chart on the page is horizontal. */
+
+.vbar-plot {
+  position: relative;
+  height: 260px;
+  margin-top: 0.35rem;
+  /* Reserves a left gutter for the y-axis tick labels — without it, the
+     labels and the leftmost bar sit at the same x and overlap. */
+  padding-left: 52px;
+}
+
+.vbar-gridlines { position: absolute; inset: 0; }
+
+.vbar-gridline {
+  position: absolute;
+  left: 52px;
+  right: 0;
+  border-top: 1px dashed var(--gridline);
+}
+
+.vbar-gridline-label {
+  position: absolute;
+  left: 0;
+  width: 44px;
+  text-align: right;
+  /* This box is anchored via `bottom: X%` (JS), i.e. positioned by its
+     BOTTOM edge. translateY(-50%) would shift a whole extra box-height
+     further up, landing the label entirely above the line instead of
+     centered on it. translateY(+50%) — down by half the box's own height —
+     is what actually lands the box's vertical center exactly on the line. */
+  transform: translateY(50%);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.vbar-bars {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 52px;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.vbar-group { flex: 1 1 0; display: flex; justify-content: center; height: 100%; cursor: pointer; }
+
+.vbar-track {
+  width: 100%;
+  max-width: 46px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+/* DOM order is [driver, passenger, unlabeled] with a column flex container
+   pushed to flex-end: driver renders on top, unlabeled at the very bottom —
+   i.e. touching the baseline, which is what "stacked bar" means. Only the
+   very top of the whole stack (driver, the first child) gets rounded. */
+.vbar-segment {
+  width: 100%;
+  height: 0;
+  flex-shrink: 0;
+  transition: height 900ms var(--ease);
+}
+
+.vbar-segment:first-child { border-radius: 4px 4px 0 0; }
+
+.vbar-labels {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  padding-left: 52px;
+}
+
+.vbar-label {
+  flex: 1 1 0;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--ink-secondary);
+}
+
+/* =============================== CAROUSEL ================================= */
+
+.carousel-title {
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--ink);
+  margin-bottom: 0.9rem;
+}
+
+.carousel {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Slightly tighter rhythm than the default .bar-row, to make room for
+   .carousel-title above without the panel outgrowing the viewport. */
+.carousel-viewport .bar-row-track { height: 14px; }
+.carousel-viewport .bar-row { margin-bottom: 0.32rem; }
+.carousel-viewport .bar-group + .bar-group { margin-top: 0.85rem; }
+
+.carousel-viewport { flex: 1 1 auto; min-width: 0; }
+
+.carousel-arrow {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--border-hairline);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.carousel-arrow:hover { background: var(--surface-muted); transform: scale(1.06); }
+.carousel-arrow:active { transform: scale(0.96); }
+
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+}
+
+.carousel-dots button {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: var(--baseline);
+  cursor: pointer;
+  padding: 0;
+}
+
+.carousel-dots button.is-active { background: var(--series-driver); width: 22px; border-radius: 4px; }
+
+.carousel-fade { animation: carousel-fade-in 420ms var(--ease); }
+@keyframes carousel-fade-in { from { opacity: 0.25; } to { opacity: 1; } }
+
+/* ============================== DUMBBELL PLOT ============================== */
+/* "O que faz um bom preditor": one horizontal line per algorithm, hollow
+   dot at the "before" (multi-omics only) value, filled dot at "after"
+   (+ centralities) — the line's length/direction IS the improvement. */
+
+/* Every row's track spans its full width (no label column: algorithm
+   identity comes from the unified legend beneath). */
+#chart-centrality-lift { position: relative; }
+
+/* Gridlines are scoped to each facet's OWN rows wrapper, not the whole
+   chart — this is what gives them a visible break between HPRD/MULTINET/
+   IREF (the gap is just .bar-group's own margin-top) instead of one
+   continuous line running through all 3 panels and the axis labels below. */
+.dumbbell-rows { position: relative; }
+
+.dumbbell-gridlines { position: absolute; inset: 0; pointer-events: none; }
+
+.dumbbell-gridline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--gridline);
+}
+
+.dumbbell-axis { position: relative; height: 18px; margin-top: 0.5rem; }
+
+.dumbbell-axis-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.dumbbell-axis-tick:first-child { transform: none; }
+
+.dumbbell-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.65rem;
+}
+
+.dumbbell-track {
+  flex: 1 1 auto;
+  position: relative;
+  height: 22px;
+  cursor: pointer;
+}
+
+.dumbbell-line {
+  position: absolute;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+  width: 0%;
+  transition: left 900ms var(--ease), width 900ms var(--ease);
+}
+
+.dumbbell-dot {
+  position: absolute;
+  top: 50%;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: left 900ms var(--ease);
+}
+
+.dumbbell-dot-before {
+  background: var(--surface);
+  border: 2px solid var(--baseline);
+}
+
+.dumbbell-dot-after { border: 2px solid var(--surface); }
+
+/* One legend for all 3 facet panels instead of repeating algorithm names
+   inside each — line 1: algorithm colors, line 2: before/after shape key. */
+.dumbbell-legend .chart-legend + .chart-legend { margin-top: 0.4rem; }
+
+/* ============================== NETWORK GRAPH ============================= */
+
+.network-panel { position: relative; }
+
+.network-svg { width: 100%; height: auto; flex-shrink: 0; }
+.network-svg .n-link { stroke: var(--gridline); stroke-width: 1.4; }
+.network-svg .n-node { stroke: var(--surface); stroke-width: 2; }
+.network-svg .n-label { font-size: 11px; fill: var(--ink-secondary); font-family: var(--font-sans); }
+.network-svg .n-hit { cursor: pointer; }
+
+.network-svg .n-group {
+  opacity: 0;
+  transform: scale(0.4);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity 500ms ease, transform 500ms var(--ease);
+}
+
+.network-svg.is-revealed .n-group { opacity: 1; transform: scale(1); }
+.network-svg.is-revealed .n-link { transition: stroke-dashoffset 900ms ease; }
+
+/* Floating card opened by clicking a node — replicates the dissertation's
+   Figure 4.2: a 2x2 grid of the 4 omics categories, each holding the 16
+   TCGA cancer-type chips that make up that category's features (4 x 16 =
+   64 total). Centered over the panel rather than corner-pinned, since this
+   much content no longer fits a small popover. */
+.network-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(99%, 700px);
+  max-height: 88%;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: 14px;
+  box-shadow: 0 24px 48px rgba(26, 26, 26, 0.18);
+  padding: 1rem 1.1rem;
+  z-index: 10;
+}
+
+.network-card[hidden] { display: none; }
+
+.network-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.network-card-gene { font-size: 1.15rem; font-weight: 800; }
+
+.network-card-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--ink-secondary);
+  margin-bottom: 0.6rem;
+}
+
+.network-card-close {
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.1rem 0.3rem;
+}
+
+.network-card-close:hover { color: var(--ink); }
+
+.network-card-intro {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0 0 0.9rem;
+}
+
+/* The 4 omics categories stack vertically (one per row) rather than a 2x2
+   grid, so each one has the full card width to lay its 16 cancer-type
+   chips out on a single horizontal line. */
+.network-card-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.network-card-category {
+  border: 1px solid var(--border-hairline);
+  border-radius: 10px;
+  padding: 0.5rem 0.55rem;
+  background: var(--paper);
+}
+
+.network-card-category h5 {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 0.35rem;
+}
+
+.network-card-chips {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.16rem;
+  justify-content: space-between;
+  /* Safety net, not the primary fix: chip size/padding below is tuned to
+     fit all 16 in one line at the card's own width, but this keeps the row
+     from ever visibly breaking (onto a second line) if a browser's font
+     metrics run a little wider — it scrolls instead of wrapping. */
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.network-card-chips::-webkit-scrollbar { display: none; }
+
+.network-card-chip {
+  flex-shrink: 0;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  padding: 0.1rem 0.22rem;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--ink-secondary);
+  white-space: nowrap;
+}
+
+/* ================================ PIPELINE ================================ */
+
+.pipeline {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+}
+
+.pipeline-stage {
+  border: 1px solid var(--border-hairline);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 0.75rem 1.1rem;
+  opacity: 0;
+  transform: translateX(-16px);
+  transition: opacity 550ms var(--ease), transform 550ms var(--ease);
+}
+
+.pipeline-stage.is-revealed { opacity: 1; transform: translateX(0); }
+
+.pipeline-stage-head { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.3rem; }
+.pipeline-stage-num { margin: 0; line-height: 1; font-size: 0.7rem; font-weight: 800; color: var(--text-muted); letter-spacing: 0.05em; }
+/* .pipeline-stage-title is an <h4> — the global h1-h5 rule (line-height:
+   1.15; margin: 0 0 0.6em) gives it an invisible bottom margin the plain
+   .pipeline-stage-num span never had. align-items:center then centers each
+   item's MARGIN box, so that one-sided margin quietly shifts the title's
+   actual text upward relative to the number sitting next to it. Zeroing
+   both removes the mismatch — the two now share the same box, top to bottom. */
+.pipeline-stage-title { margin: 0; line-height: 1; font-size: 1rem; font-weight: 700; }
+
+/* The last stage ("Abordagem em ensemble") has no substeps, so its card is
+   just the head — center it so it doesn't read as left-aligned and empty
+   next to the other, substep-filled cards. */
+.pipeline-stage-empty { display: flex; align-items: center; justify-content: flex-start; min-height: 2.4rem; }
+.pipeline-stage-empty .pipeline-stage-head { margin-bottom: 0; }
+
+.pipeline-substeps { list-style: none; display: flex; flex-direction: column; gap: 0.2rem; }
+.pipeline-substeps li {
+  font-size: 0.83rem;
+  color: var(--ink-secondary);
+  padding-left: 0.6rem;
+  border-left: 2px solid var(--gridline);
+}
+
+.pipeline-arrow { display: flex; justify-content: center; padding: 0.05rem 0; color: var(--baseline); }
+
+/* ============================ GENE EXPLORER =============================== */
+
+.explorer-section {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 5rem 1.75rem 6rem;
+}
+
+.explorer-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: 3rem;
+  align-items: start;
+}
+
+.explorer-intro p { max-width: 48ch; }
+
+.explorer-tool { position: sticky; top: calc(var(--header-h) + 1.5rem); }
+
+.explorer-card {
+  background: var(--surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: 14px;
+  padding: 1.75rem;
+}
+
+.explorer-label {
+  display: block;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.explorer-search-wrap { position: relative; }
+
+#gene-search-input {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-hairline);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+#gene-search-input:focus { outline: 2px solid var(--series-passenger); outline-offset: 1px; }
+
+.explorer-listbox {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 0.3rem);
+  left: 0;
+  right: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+  list-style: none;
+  padding: 0.3rem;
+}
+
+.explorer-listbox li {
+  padding: 0.45rem 0.65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.explorer-listbox li.is-highlighted,
+.explorer-listbox li:hover { background: var(--surface-muted); }
+
+.explorer-listbox li.is-note { color: var(--text-muted); font-size: 0.82rem; cursor: default; }
+
+.explorer-status { font-size: 0.85rem; color: var(--text-muted); margin: 0.85rem 0 0; }
+.explorer-status[hidden] { display: none; }
+.explorer-status.is-error { color: var(--series-driver); }
+
+.explorer-examples { margin-top: 0.85rem; font-size: 0.85rem; color: var(--ink-secondary); }
+.explorer-examples button {
+  margin: 0 0.4rem 0.4rem 0;
+  padding: 0.32rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-hairline);
+  background: transparent;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.explorer-examples button:hover { background: var(--surface-muted); }
+
+.gene-detail { border-top: 1px solid var(--border-hairline); margin-top: 1.25rem; padding-top: 1.25rem; }
+.gene-detail[hidden] { display: none; }
+.gene-detail h4 { font-size: 1.2rem; margin-bottom: 1rem; }
+
+.gene-detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.4rem;
+  margin-bottom: 1.3rem;
+}
+
+/* Left margin sized to fit the widest badge label ("Média do ensemble") at
+   this font size without wrapping or clipping its leading letter. */
+.badge-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  margin-bottom: 0.3rem;
+  white-space: nowrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-hairline);
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.badge-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.badge-value { font-size: 1.15rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+.gene-chart-heading { font-size: 0.92rem; color: var(--ink-secondary); margin-bottom: 0.75rem; }
+
+@media (max-width: 900px) {
+  .explorer-layout { grid-template-columns: 1fr; }
+  .explorer-tool { position: static; margin-top: 2.5rem; }
+}
+
+/* ================================ FOOTER =================================== */
+
+.site-footer {
+  background: var(--surface-muted);
+  border-top: 1px solid var(--border-hairline);
+}
+
+.site-footer-inner {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 4.5rem 1.75rem 4rem;
+  display: grid;
+  /* Column 2 needs a real minimum, not a fraction: at 1fr it was narrower
+     than its own longest line ("Programa: Programa de Pós-Graduação em
+     Computação (PPGC)"), forcing a wrap. minmax() guarantees enough room
+     while still letting all 3 columns shrink together on medium screens
+     (the sub-760px breakpoint below stacks them into 1 column anyway). */
+  grid-template-columns: 1fr minmax(320px, 500px) minmax(160px, 220px);
+  gap: 1.75rem;
+}
+
+.footer-col-title { font-size: 1.4rem; margin-bottom: 0.9rem; }
+
+.footer-col-sub {
+  font-size: 0.92rem;
+  font-style: italic;
+  color: var(--ink-secondary);
+  margin: 0;
+  max-width: 48ch;
+}
+
+.footer-logos {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 1.4rem;
+}
+
+/* Sized by height, not width — the 3 source logos have very different
+   aspect ratios (a square icon, a ~1.2:1 mark, a wide ~1.7:1 wordmark), so
+   a shared height is what actually reads as "same size" next to each
+   other; width is left to scale naturally per logo.
+
+   Heights are NOT equal, by design, measured off the reference composite
+   the site owner supplied (bounding-box heights ~46px / ~42px / ~37px for
+   tree / UFRGS / INF respectively — ratios ~1.10 : 1.00 : 0.88). The INF
+   mark carries a full institute name in small type next to the icon, so
+   at equal pixel height it reads visually heavier/larger than the other
+   two; scaling it down (and the tree mark slightly up) is what actually
+   reads as "same visual weight" side by side. UFRGS is the unscaled
+   baseline. */
+.footer-logo {
+  width: auto;
+  display: block;
+  height: 38px;
+}
+
+.footer-logo-tree { height: 42px; }
+.footer-logo-ufrgs { height: 38px; }
+.footer-logo-inf { height: 34px; }
+
+/* Column 2's four lines share one uniform size/weight/color — the "label:
+   value" contrast lives in the wording ("Pesquisa por:", "Programa:"), not
+   in typography, per the requested layout. */
+.footer-meta-line {
+  font-size: 0.95rem;
+  color: var(--ink);
+  margin: 0 0 0.7rem;
+  white-space: nowrap;
+}
+
+.footer-col-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  align-items: stretch;
+}
+
+/* Both buttons stretch to fill this column, so they always match widths
+   regardless of their (now different-length) text. */
+.footer-col-buttons .footer-btn { width: 100%; }
+
+@media (max-width: 760px) {
+  .site-footer-inner { grid-template-columns: 1fr; }
+}
+
+.footer-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 1.6rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  border: 1px solid var(--border-hairline);
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.footer-btn-primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.footer-btn:hover { opacity: 0.85; }
+
+@media (max-width: 620px) {
+  .hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
