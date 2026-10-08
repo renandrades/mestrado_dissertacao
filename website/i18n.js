@@ -335,7 +335,7 @@ window.I18N = {
 
     'footer.title': 'Tesis Completa',
     'footer.author': '<strong>Investigación de:</strong> Renan Soares de Andrades',
-    'footer.advisor': '<strong>Directora:</strong> Profa. Dra. Mariana Recamonde-Mendoza',
+    'footer.advisor': '<strong>Directora:</strong> Prof.ª Dr.ª Mariana Recamonde-Mendoza',
     'footer.institution': '<strong>Institución:</strong> Universidade Federal do Rio Grande do Sul (UFRGS)',
     'footer.lume': 'Texto completo (Lume)',
     'footer.github': 'Código y datos (GitHub)',
