@@ -16,6 +16,95 @@
   var MOBILE = window.matchMedia('(max-width: 900px)');
 
   /* ========================================================================
+     I18N — PT (default) / EN / ES, same URL. Portuguese HTML text is the
+     source in index.html (data-i18n / data-i18n-attr); EN/ES and every
+     JS-generated string live in i18n.js. The choice is saved in
+     localStorage; ?lang=en|es opens a specific language without saving.
+     Switching language never re-runs chart animations: JS-built text is
+     registered with bindText() and simply re-evaluated in place.
+     ======================================================================== */
+
+  var LANGS = ['pt', 'en', 'es'];
+  var HTML_LANG = { pt: 'pt-BR', en: 'en', es: 'es' };
+  var lang = 'pt';
+  var ptFromHtml = {};
+  var i18nNodes = [];
+  var i18nAttrs = [];
+  var boundTexts = [];
+  var langListeners = [];
+
+  function t(key, vars) {
+    var dict = window.I18N || {};
+    var s = dict[lang] && dict[lang][key];
+    if (s == null && dict.pt) s = dict.pt[key];
+    if (s == null) s = ptFromHtml[key];
+    if (s == null) s = key;
+    if (vars) s = s.replace(/\{(\w+)\}/g, function (m, k) { return vars[k] != null ? vars[k] : m; });
+    return s;
+  }
+
+  /** Sets node's text from fn() now and again after every language switch. */
+  function bindText(node, fn) {
+    node.textContent = fn();
+    boundTexts.push({ node: node, fn: fn });
+    return node;
+  }
+
+  function onLangChange(fn) { langListeners.push(fn); }
+
+  function collectI18n() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-i18n]'), function (node) {
+      var key = node.getAttribute('data-i18n');
+      if (!(key in ptFromHtml)) ptFromHtml[key] = node.innerHTML.trim();
+      i18nNodes.push(node);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-i18n-attr]'), function (node) {
+      node.getAttribute('data-i18n-attr').split(';').forEach(function (pair) {
+        var parts = pair.split(':');
+        var attr = parts[0].trim(), key = parts[1].trim();
+        if (!(key in ptFromHtml)) ptFromHtml[key] = node.getAttribute(attr);
+        i18nAttrs.push({ node: node, attr: attr, key: key });
+      });
+    });
+  }
+
+  function initialLang() {
+    var fromUrl = null;
+    try { fromUrl = new URLSearchParams(window.location.search).get('lang'); } catch (e) { /* ignore */ }
+    if (LANGS.indexOf(fromUrl) !== -1) return fromUrl;
+    try {
+      var saved = localStorage.getItem('lang');
+      if (LANGS.indexOf(saved) !== -1) return saved;
+    } catch (e) { /* storage blocked */ }
+    return 'pt';
+  }
+
+  function setLang(next, persist) {
+    lang = LANGS.indexOf(next) !== -1 ? next : 'pt';
+    document.documentElement.lang = HTML_LANG[lang];
+    i18nNodes.forEach(function (node) { node.innerHTML = t(node.getAttribute('data-i18n')); });
+    i18nAttrs.forEach(function (a) { a.node.setAttribute(a.attr, t(a.key)); });
+    boundTexts = boundTexts.filter(function (b) { return b.node.isConnected; });
+    boundTexts.forEach(function (b) { b.node.textContent = b.fn(); });
+    langListeners.forEach(function (fn) { fn(); });
+    Array.prototype.forEach.call(document.querySelectorAll('.lang-btn'), function (btn) {
+      btn.setAttribute('aria-pressed', String(btn.getAttribute('data-lang') === lang));
+    });
+    if (persist) {
+      try { localStorage.setItem('lang', lang); } catch (e) { /* private mode: just don't persist */ }
+    }
+  }
+
+  function setupLangSwitch() {
+    Array.prototype.forEach.call(document.querySelectorAll('.lang-btn'), function (btn) {
+      btn.addEventListener('click', function () {
+        var next = btn.getAttribute('data-lang');
+        if (next !== lang) setLang(next, true);
+      });
+    });
+  }
+
+  /* ========================================================================
      REAL DATA — every number below comes from the dissertation (see the
      Astro rebuild's src/charts/*.config.ts for original sourcing/citations).
      Network codes are the single standardized form used everywhere on this
@@ -105,12 +194,9 @@
     visualCeiling: 0.75,
   };
 
-  var METHODOLOGY_STAGES = [
-    { title: 'Coleta de dados', substeps: ['Rede de interação proteína-proteína (PPI)', 'Atributos multi-ômicos', 'Exemplos positivos e negativos'] },
-    { title: 'Pré-processamento dos dados', substeps: ['Mapeamento de IDs', 'Interseção entre redes e atributos', 'Cálculo de centralidades'] },
-    { title: 'Treinamento do modelo', substeps: ['Seleção do algoritmo', 'Tratamento do desbalanceamento de classes', 'Otimização de hiperparâmetros', 'Avaliação'] },
-    { title: 'Abordagem em ensemble', substeps: [] },
-  ];
+  // Number of substeps per stage; texts are i18n keys 'meth.<stage>' and
+  // 'meth.<stage>.<substep>' (see i18n.js).
+  var METHODOLOGY_SUBSTEPS = [3, 3, 4, 0];
 
   // Illustrative toy PPI graph (hand-laid-out seed positions, not real
   // interaction data) — relaxed into a better spread by relaxNetworkLayout()
@@ -146,8 +232,7 @@
     ],
   };
 
-  var GROUP_LABEL = { gat: 'GAT', gcn: 'GCN', graphsage: 'GraphSAGE', gbt: 'GBT', individual: 'Redes individuais', ensemble: 'Ensemble-Average' };
-  var GROUP_TEXT_PT = { driver: 'Driver', passenger: 'Passenger', unlabeled: 'Não rotulado' };
+  var GROUP_LABEL = { gat: 'GAT', gcn: 'GCN', graphsage: 'GraphSAGE', gbt: 'GBT' };
   var RADIUS = { driver: 11, passenger: 6, unlabeled: 6 };
   var HIT_RADIUS = { driver: 17, passenger: 14, unlabeled: 14 };
 
@@ -155,9 +240,13 @@
      FORMATTING
      ======================================================================== */
 
-  function fmtAuc(v) { return v.toFixed(3).replace('.', ','); }
-  function fmtInt(v) { return Math.round(v).toLocaleString('pt-BR'); }
-  function fmtPercent(v) { return (v * 100).toFixed(1).replace('.', ',') + '%'; }
+  // PT/ES: 0,677 and 19.602. EN: 0.677 and 19,602. Grouping is done by hand
+  // (not toLocaleString) so 4-digit values group the same way in every
+  // language — es-ES would otherwise print 5000 next to 10.000 on one axis.
+  function fmtDec(v, digits) { return v.toFixed(digits).replace('.', lang === 'en' ? '.' : ','); }
+  function fmtAuc(v) { return fmtDec(v, 3); }
+  function fmtInt(v) { return String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, lang === 'en' ? ',' : '.'); }
+  function fmtPercent(v) { return fmtDec(v * 100, 1) + '%'; }
 
   /* ========================================================================
      SMALL DOM HELPERS
@@ -283,11 +372,14 @@
     track.appendChild(fill);
     row.appendChild(track);
 
+    // valueText may be a function (e.g. a number formatter) so the printed
+    // value re-formats on language change without touching the bar.
+    var valueFn = typeof opts.valueText === 'function' ? opts.valueText : function () { return opts.valueText; };
     var value = el('div', 'bar-row-value');
-    value.textContent = opts.valueText;
+    bindText(value, valueFn);
     row.appendChild(value);
 
-    Tooltip.wire(track, opts.valueText, opts.tooltipLabel || opts.label || '');
+    Tooltip.wire(track, valueFn, opts.tooltipLabel || opts.label || '');
 
     var targetPct = Math.max(0, Math.min(100, opts.pct));
     return {
@@ -345,7 +437,7 @@
       gridWrap.appendChild(line);
       var label = el('span', 'vbar-gridline-label');
       label.style.bottom = frac * 100 + '%';
-      label.textContent = fmtInt(tickValue);
+      bindText(label, function () { return fmtInt(tickValue); });
       gridWrap.appendChild(label);
     });
     plot.appendChild(gridWrap);
@@ -372,9 +464,9 @@
       // Absolute count PLUS the share of that network's own total — the
       // percentage is what actually makes the imbalance legible at a glance.
       var networkTotal = c.driver + c.passenger + c.unlabeled;
-      Tooltip.wire(segDriver, function () { return fmtInt(c.driver) + ' (' + fmtPercent(c.driver / networkTotal) + ')'; }, n + ' · Driver');
-      Tooltip.wire(segPassenger, function () { return fmtInt(c.passenger) + ' (' + fmtPercent(c.passenger / networkTotal) + ')'; }, n + ' · Passenger');
-      Tooltip.wire(segUnlabeled, function () { return fmtInt(c.unlabeled) + ' (' + fmtPercent(c.unlabeled / networkTotal) + ')'; }, n + ' · Não rotulado');
+      Tooltip.wire(segDriver, function () { return fmtInt(c.driver) + ' (' + fmtPercent(c.driver / networkTotal) + ')'; }, function () { return n + ' · ' + t('group.driver'); });
+      Tooltip.wire(segPassenger, function () { return fmtInt(c.passenger) + ' (' + fmtPercent(c.passenger / networkTotal) + ')'; }, function () { return n + ' · ' + t('group.passenger'); });
+      Tooltip.wire(segUnlabeled, function () { return fmtInt(c.unlabeled) + ' (' + fmtPercent(c.unlabeled / networkTotal) + ')'; }, function () { return n + ' · ' + t('group.unlabeled'); });
 
       track.appendChild(segDriver);
       track.appendChild(segPassenger);
@@ -538,7 +630,7 @@
       outer.appendChild(g);
       nodeLayer.appendChild(outer);
 
-      Tooltip.wire(hit, n.id, GROUP_TEXT_PT[n.group]);
+      Tooltip.wire(hit, n.id, function () { return t('group.' + n.group); });
       nodeEls.push({ node: n, outer: outer, hit: hit });
     });
     svg.appendChild(nodeLayer);
@@ -584,8 +676,9 @@
     var card = el('div', 'network-card', { hidden: 'hidden' });
     var head = el('div', 'network-card-head');
     var geneEl = el('span', 'network-card-gene');
-    var closeBtn = el('button', 'network-card-close', { type: 'button', 'aria-label': 'Fechar' });
+    var closeBtn = el('button', 'network-card-close', { type: 'button', 'aria-label': t('card.close') });
     closeBtn.textContent = '×';
+    onLangChange(function () { closeBtn.setAttribute('aria-label', t('card.close')); });
     head.appendChild(geneEl);
     head.appendChild(closeBtn);
     card.appendChild(head);
@@ -594,7 +687,7 @@
     card.appendChild(groupEl);
 
     var intro = el('p', 'network-card-intro');
-    intro.textContent = '64 atributos multi-ômicos: 4 categorias × 16 tipos de câncer do TCGA';
+    bindText(intro, function () { return t('card.intro'); });
     card.appendChild(intro);
 
     var grid = el('div', 'network-card-grid');
@@ -631,7 +724,7 @@
       var dot = el('span', '');
       dot.style.cssText = 'width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--series-' + entry.node.group + ')';
       groupEl.appendChild(dot);
-      groupEl.appendChild(document.createTextNode(GROUP_TEXT_PT[entry.node.group]));
+      groupEl.appendChild(bindText(el('span', ''), function () { return t('group.' + entry.node.group); }));
       card.hidden = false;
     }
 
@@ -666,33 +759,33 @@
     var list = document.getElementById('chart-methodology');
     var stages = [];
 
-    METHODOLOGY_STAGES.forEach(function (stage, i) {
+    METHODOLOGY_SUBSTEPS.forEach(function (substepCount, i) {
       // No substeps ("Abordagem em ensemble") -> center the head within the
       // card instead of leaving it top/left-aligned in an otherwise-empty box.
-      var li = el('li', stage.substeps.length ? 'pipeline-stage' : 'pipeline-stage pipeline-stage-empty');
+      var li = el('li', substepCount ? 'pipeline-stage' : 'pipeline-stage pipeline-stage-empty');
       var head = el('div', 'pipeline-stage-head');
       var num = el('span', 'pipeline-stage-num');
       num.textContent = String(i + 1).padStart(2, '0');
       var title = el('h4', 'pipeline-stage-title');
-      title.textContent = stage.title;
+      bindText(title, function () { return t('meth.' + i); });
       head.appendChild(num);
       head.appendChild(title);
       li.appendChild(head);
 
-      if (stage.substeps.length) {
+      if (substepCount) {
         var sub = el('ul', 'pipeline-substeps');
-        stage.substeps.forEach(function (s) {
-          var subLi = el('li', '');
-          subLi.textContent = s;
-          sub.appendChild(subLi);
-        });
+        for (var j = 0; j < substepCount; j += 1) {
+          (function (key) {
+            sub.appendChild(bindText(el('li', ''), function () { return t(key); }));
+          })('meth.' + i + '.' + j);
+        }
         li.appendChild(sub);
       }
 
       list.appendChild(li);
       stages.push(li);
 
-      if (i < METHODOLOGY_STAGES.length - 1) {
+      if (i < METHODOLOGY_SUBSTEPS.length - 1) {
         var arrowLi = el('li', 'pipeline-arrow');
         arrowLi.innerHTML = '<svg width="16" height="20" viewBox="0 0 16 20" aria-hidden="true"><path d="M8,1 L8,13 M2,9 L8,15 L14,9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         list.appendChild(arrowLi);
@@ -731,9 +824,9 @@
       // continuous line running through all 3 panels.
       var rowsWrap = el('div', 'dumbbell-rows');
       var gridWrap = el('div', 'dumbbell-gridlines');
-      ticks.forEach(function (t) {
+      ticks.forEach(function (tickValue) {
         var line = el('div', 'dumbbell-gridline');
-        line.style.left = (t / maxValue) * 100 + '%';
+        line.style.left = (tickValue / maxValue) * 100 + '%';
         gridWrap.appendChild(line);
       });
       rowsWrap.appendChild(gridWrap);
@@ -767,8 +860,7 @@
         rowsWrap.appendChild(row);
 
         var tooltipLabel = GROUP_LABEL[algo] + ' · ' + facet;
-        var tooltipValue = fmtAuc(pair[0]) + ' → ' + fmtAuc(pair[1]);
-        Tooltip.wire(track, tooltipValue, tooltipLabel);
+        Tooltip.wire(track, function () { return fmtAuc(pair[0]) + ' → ' + fmtAuc(pair[1]); }, tooltipLabel);
 
         reveals.push(function () {
           var left = Math.min(beforePct, afterPct);
@@ -786,10 +878,10 @@
     // X-axis value labels only under the LAST (bottom) facet — the two
     // panels above it just have the plain gridlines running through them.
     var axis = el('div', 'dumbbell-axis');
-    ticks.forEach(function (t) {
+    ticks.forEach(function (tickValue) {
       var tick = el('span', 'dumbbell-axis-tick');
-      tick.style.left = (t / maxValue) * 100 + '%';
-      tick.textContent = t.toFixed(2);
+      tick.style.left = (tickValue / maxValue) * 100 + '%';
+      bindText(tick, function () { return fmtDec(tickValue, 2); });
       axis.appendChild(tick);
     });
     container.appendChild(axis);
@@ -824,7 +916,7 @@
         var value = GNN_VS_TRADITIONAL.values[category][i];
         var bar = makeBarRow({
           label: null, tooltipLabel: GROUP_LABEL[algo] + ' · ' + category, color: 'var(--series-' + algo + ')',
-          pct: (value / maxValue) * 100, valueText: fmtAuc(value),
+          pct: (value / maxValue) * 100, valueText: function () { return fmtAuc(value); },
         });
         group.appendChild(bar.row);
         growers.push(bar.grow);
@@ -856,7 +948,7 @@
       var bar = makeBarRow({
         label: category, labelWidth: 118,
         color: isEnsemble ? 'var(--series-ensemble)' : 'var(--series-individual)',
-        pct: (value / maxValue) * 100, valueText: fmtAuc(value),
+        pct: (value / maxValue) * 100, valueText: function () { return fmtAuc(value); },
       });
       if (isReveal) {
         bar.row.classList.add('reveal-bar');
@@ -898,7 +990,8 @@
     var maxValue = 0.65;
 
     facets.forEach(function (facet, i) {
-      var dot = el('button', i === 0 ? 'is-active' : '', { type: 'button', 'aria-label': 'Ir para ' + facet });
+      var dot = el('button', i === 0 ? 'is-active' : '', { type: 'button', 'aria-label': t('carousel.goTo', { name: facet }) });
+      onLangChange(function () { dot.setAttribute('aria-label', t('carousel.goTo', { name: facet })); });
       dot.addEventListener('click', function () { goTo(i); });
       dotsWrap.appendChild(dot);
     });
@@ -924,7 +1017,7 @@
           var value = IMBALANCE_STRATEGIES.values[facet][categoryIndex][algoIndex];
           var bar = makeBarRow({
             label: null, tooltipLabel: GROUP_LABEL[algo] + ' · ' + category, color: 'var(--series-' + algo + ')',
-            pct: (value / maxValue) * 100, valueText: fmtAuc(value),
+            pct: (value / maxValue) * 100, valueText: function () { return fmtAuc(value); },
           });
           group.appendChild(bar.row);
           growers.push(bar.grow);
@@ -962,26 +1055,32 @@
   function setupHeroStats() {
     var wrap = document.getElementById('hero-stats');
     if (!wrap) return;
-    var values = wrap.querySelectorAll('[data-count-to]');
+    // Each counter keeps its current numeric value; the displayed text is
+    // always formatted for the active language (also mid-animation).
+    var counters = Array.prototype.map.call(wrap.querySelectorAll('[data-count-to]'), function (node) {
+      var c = {
+        node: node,
+        target: parseFloat(node.getAttribute('data-count-to')),
+        decimals: parseInt(node.getAttribute('data-decimals') || '0', 10),
+        current: 0,
+      };
+      c.text = function () { return c.decimals > 0 ? fmtDec(c.current, c.decimals) : fmtInt(c.current); };
+      bindText(node, c.text);
+      return c;
+    });
+
+    function render(c) { c.node.textContent = c.text(); }
 
     revealOnce(wrap, function () {
-      values.forEach(function (node) {
-        var target = parseFloat(node.getAttribute('data-count-to'));
-        var decimals = parseInt(node.getAttribute('data-decimals') || '0', 10);
-        var suffix = node.getAttribute('data-suffix') || '';
-        var useComma = node.getAttribute('data-comma') === 'true';
+      counters.forEach(function (c) {
         var duration = 1200;
         var start = null;
 
         function frame(ts) {
           if (start === null) start = ts;
           var progress = Math.min(1, (ts - start) / duration);
-          var eased = 1 - Math.pow(1 - progress, 3);
-          var current = target * eased;
-          var text = decimals > 0 ? current.toFixed(decimals) : Math.round(current).toString();
-          if (decimals > 0 && useComma) text = text.replace('.', ',');
-          else if (decimals === 0) text = fmtInt(current);
-          node.textContent = text + suffix;
+          c.current = c.target * (1 - Math.pow(1 - progress, 3));
+          render(c);
           if (progress < 1) requestAnimationFrame(frame);
         }
         requestAnimationFrame(frame);
@@ -1011,6 +1110,14 @@
     var sortedSymbols = [];
     var highlightedIndex = -1;
     var visibleSymbols = [];
+    var statusKey = 'exp.loading';
+    var shown = null; // the gene currently in the detail panel
+
+    function renderStatus() {
+      status.hidden = !statusKey;
+      status.textContent = statusKey ? t(statusKey) : '';
+    }
+    renderStatus();
 
     fetch('data/gene-predictions.json')
       .then(function (res) {
@@ -1020,14 +1127,21 @@
       .then(function (json) {
         dataset = json;
         sortedSymbols = Object.keys(dataset.genes).sort();
-        status.textContent = '';
-        status.hidden = true;
+        statusKey = null;
+        renderStatus();
         input.disabled = false;
       })
       .catch(function () {
-        status.textContent = 'Não foi possível carregar os dados dos genes. Tente novamente mais tarde.';
+        statusKey = 'exp.error';
+        renderStatus();
         status.classList.add('is-error');
       });
+
+    onLangChange(function () {
+      renderStatus();
+      updateDetailTexts();
+      listbox.hidden = true; // its notes were built in the previous language
+    });
 
     function bisectLeft(sorted, value) {
       var lo = 0, hi = sorted.length;
@@ -1064,7 +1178,7 @@
       if (!visibleSymbols.length) {
         if (input.value.trim().length) {
           var none = el('li', 'is-note');
-          none.textContent = 'Nenhum gene encontrado com esse símbolo.';
+          none.textContent = t('exp.none');
           listbox.appendChild(none);
           listbox.hidden = false;
         } else {
@@ -1083,7 +1197,7 @@
 
       if (totalMatches > visibleSymbols.length) {
         var more = el('li', 'is-note');
-        more.textContent = '+' + (totalMatches - visibleSymbols.length) + ' outros resultados — continue digitando para refinar';
+        more.textContent = t('exp.more', { n: totalMatches - visibleSymbols.length });
         listbox.appendChild(more);
       }
 
@@ -1105,16 +1219,26 @@
       renderGeneDetail(symbol, dataset.genes[symbol]);
     }
 
+    /** Every language-dependent text of the detail panel — run on render and
+     * again on language change (the bars themselves are left as they are). */
+    function updateDetailTexts() {
+      if (!shown) return;
+      var p = shown.prediction;
+      detailHeading.textContent = t('exp.detailsOf', { gene: shown.symbol });
+      trueLabelBadge.querySelector('span:last-child').textContent =
+        t(p.true === 1 ? 'exp.knownDriver' : p.true === 0 ? 'exp.knownPassenger' : 'exp.unlabeled');
+      ensembleAvgEl.textContent = p.ensembleAvg === null ? t('exp.unavailable') : fmtPercent(p.ensembleAvg);
+      majorityLabelEl.textContent = t('exp.votes', { votes: shown.votes, total: shown.total });
+      majorityVerdictEl.querySelector('span:last-child').textContent =
+        t(p.ensembleMajority === 1 ? 'exp.majorityDriver' : 'exp.majorityNot');
+      if (shown.ensembleLabel) shown.ensembleLabel.lastChild.textContent = t('exp.ensembleAvg');
+    }
+
     function renderGeneDetail(symbol, prediction) {
       detail.hidden = false;
-      detailHeading.textContent = 'Detalhes de ' + symbol;
 
-      var trueLabel = prediction.true === 1 ? 'Driver conhecido' : prediction.true === 0 ? 'Passenger conhecido' : 'Não rotulado';
       var trueColor = prediction.true === 1 ? 'var(--series-driver)' : prediction.true === 0 ? 'var(--series-passenger)' : 'var(--series-unlabeled)';
       trueLabelBadge.querySelector('.badge-dot').style.background = trueColor;
-      trueLabelBadge.querySelector('span:last-child').textContent = trueLabel;
-
-      ensembleAvgEl.textContent = prediction.ensembleAvg === null ? 'Indisponível' : fmtPercent(prediction.ensembleAvg);
 
       var ensembleNetworks = dataset.meta.ensembleNetworks;
       var votes = 0;
@@ -1122,10 +1246,9 @@
         var v = prediction.networks[n];
         if (v !== null && v !== undefined && v >= 0.5) votes += 1;
       });
-      majorityLabelEl.textContent = votes + '/' + ensembleNetworks.length + ' redes do ensemble preveem driver';
       var majorityIsDriver = prediction.ensembleMajority === 1;
       majorityVerdictEl.querySelector('.badge-dot').style.background = majorityIsDriver ? 'var(--series-driver)' : 'var(--series-passenger)';
-      majorityVerdictEl.querySelector('span:last-child').textContent = majorityIsDriver ? 'Votação majoritária: candidato a driver' : 'Votação majoritária: não é driver';
+      shown = { symbol: symbol, prediction: prediction, votes: votes, total: ensembleNetworks.length, ensembleLabel: null };
 
       // One shared label width for EVERY row in this chart, including the
       // ensemble-average row — different widths per row would shift where
@@ -1142,12 +1265,12 @@
         if (value === null || value === undefined) {
           // "N/A" instead of "Sem dados": a longer phrase risks wrapping
           // inside the fixed-width value column.
-          var absentRow = makeBarRow({ label: code, labelWidth: LOLLIPOP_LABEL_WIDTH, muted: true, pct: 0, valueText: 'N/A' });
+          var absentRow = makeBarRow({ label: code, labelWidth: LOLLIPOP_LABEL_WIDTH, muted: true, pct: 0, valueText: function () { return t('exp.na'); } });
           networkChart.appendChild(absentRow.row);
           return;
         }
         var color = value >= 0.5 ? 'var(--series-driver)' : 'var(--series-passenger)';
-        var row = makeBarRow({ label: code, labelWidth: LOLLIPOP_LABEL_WIDTH, color: color, pct: value * 100, valueText: fmtPercent(value) });
+        var row = makeBarRow({ label: code, labelWidth: LOLLIPOP_LABEL_WIDTH, color: color, pct: value * 100, valueText: function () { return fmtPercent(value); } });
         networkChart.appendChild(row.row);
         row.grow();
       });
@@ -1157,16 +1280,20 @@
         var ensembleRow = makeBarRow({
           // No swatchColor: unlike network rows (identified by their code),
           // this summary row has no color-coded chart series of its own.
-          label: 'Média do ensemble', labelWidth: LOLLIPOP_LABEL_WIDTH,
-          color: ensembleColor, pct: prediction.ensembleAvg * 100, valueText: fmtPercent(prediction.ensembleAvg),
+          label: t('exp.ensembleAvg'), labelWidth: LOLLIPOP_LABEL_WIDTH,
+          tooltipLabel: function () { return t('exp.ensembleAvg'); },
+          color: ensembleColor, pct: prediction.ensembleAvg * 100, valueText: function () { return fmtPercent(prediction.ensembleAvg); },
         });
         ensembleRow.row.style.borderTop = '1px solid var(--border-hairline)';
         ensembleRow.row.style.marginTop = '0.5rem';
         ensembleRow.row.style.paddingTop = '0.5rem';
-        ensembleRow.row.querySelector('.bar-row-label').style.fontWeight = '700';
+        shown.ensembleLabel = ensembleRow.row.querySelector('.bar-row-label');
+        shown.ensembleLabel.style.fontWeight = '700';
         networkChart.appendChild(ensembleRow.row);
         ensembleRow.grow();
       }
+
+      updateDetailTexts();
     }
 
     input.addEventListener('input', function () {
@@ -1354,10 +1481,11 @@
 
     function sync() {
       var dark = root.getAttribute('data-theme') === 'dark';
-      var label = dark ? 'Ativar tema claro' : 'Ativar tema escuro';
+      var label = t(dark ? 'theme.toLight' : 'theme.toDark');
       btn.setAttribute('aria-label', label);
       btn.setAttribute('title', label);
     }
+    onLangChange(sync);
 
     btn.addEventListener('click', function () {
       var dark = root.getAttribute('data-theme') !== 'dark';
@@ -1383,6 +1511,11 @@
      ======================================================================== */
 
   document.addEventListener('DOMContentLoaded', function () {
+    // Language first, so every chart below is built in it from the start.
+    collectI18n();
+    setLang(initialLang(), false);
+    setupLangSwitch();
+
     setupProgressBar();
     setupNarrativeReveal();
     setupHeroStats();
@@ -1399,6 +1532,10 @@
     setupThemeToggle();
     var requestFit = setupPanelFit();
     requestFit();
+    // Translated texts have different lengths, so chart heights can change.
+    onLangChange(requestFit);
+    // Revealed only now that the texts are in the chosen language (see <head>).
+    document.documentElement.classList.remove('i18n-pending');
 
     setupSections(function (sectionId, panelId, isFirstTimeForPanel) {
       if (!isFirstTimeForPanel) {

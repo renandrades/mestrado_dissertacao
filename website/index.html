@@ -3,36 +3,53 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Genes causadores de câncer &amp; Graph Neural Networks</title>
-  <meta name="description" content="Uma dissertação de mestrado sobre Graph Neural Networks, redes de interação de proteínas e a corrida para identificar genes causadores de câncer, contada como scrollytelling." />
+  <title data-i18n="meta.title">Genes causadores de câncer &amp; Graph Neural Networks</title>
+  <meta name="description" data-i18n-attr="content:meta.description" content="Uma dissertação de mestrado sobre Graph Neural Networks, redes de interação de proteínas e a corrida para identificar genes causadores de câncer, contada como scrollytelling." />
   <link rel="stylesheet" href="style.css" />
-  <!-- Aplica o tema salvo antes da primeira pintura (padrão: claro). -->
+  <!-- Antes da primeira pintura: aplica o tema salvo (padrão: claro) e, se o
+       idioma escolhido não for o português, esconde a página até o
+       script.js trocar os textos (evita piscar o texto em português). -->
   <script>
-    try { if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) {}
+    (function () {
+      var root = document.documentElement, lang = null;
+      try { if (localStorage.getItem('theme') === 'dark') root.setAttribute('data-theme', 'dark'); } catch (e) {}
+      try { lang = new URLSearchParams(location.search).get('lang'); } catch (e) {}
+      if (lang !== 'pt' && lang !== 'en' && lang !== 'es') { try { lang = localStorage.getItem('lang'); } catch (e) {} }
+      if (lang === 'en' || lang === 'es') {
+        root.lang = lang;
+        root.classList.add('i18n-pending');
+        setTimeout(function () { root.classList.remove('i18n-pending'); }, 2500);
+      }
+    })();
   </script>
 </head>
 <body>
 
   <!-- ============================================================ -->
-  <!-- HEADER: título, barra de progresso e navegação por pontos     -->
+  <!-- HEADER: título, navegação por pontos, tema e idioma           -->
+  <!--                                                               -->
+  <!-- Traduções: todo elemento com data-i18n="chave" (conteúdo) ou  -->
+  <!-- data-i18n-attr="atributo:chave" tem o texto em português aqui -->
+  <!-- mesmo; as versões em inglês e espanhol ficam em i18n.js, com  -->
+  <!-- a mesma chave.                                                -->
   <!-- ============================================================ -->
   <header class="site-header" id="site-header">
     <div class="site-header-inner">
       <span class="site-header-title">Cancer Driver Genes &amp; Graph Neural Networks</span>
 
       <div class="header-controls">
-      <nav class="section-dots" aria-label="Navegação por seções">
+      <nav class="section-dots" aria-label="Navegação por seções" data-i18n-attr="aria-label:nav.label">
         <ul>
-          <li><a href="#hero" data-section-id="hero" aria-label="Abertura"><span class="dot"></span></a></li>
-          <li><a href="#problema" data-section-id="problema" aria-label="O problema"><span class="dot"></span></a></li>
-          <li><a href="#ideia" data-section-id="ideia" aria-label="A ideia"><span class="dot"></span></a></li>
-          <li><a href="#metodologia" data-section-id="metodologia" aria-label="Metodologia"><span class="dot"></span></a></li>
-          <li><a href="#achado-features" data-section-id="achado-features" aria-label="Achado 1: atributos"><span class="dot"></span></a></li>
-          <li><a href="#achado-imbalance" data-section-id="achado-imbalance" aria-label="Achado 2: desbalanceamento"><span class="dot"></span></a></li>
-          <li><a href="#achado-gnn" data-section-id="achado-gnn" aria-label="Achado 3: GNNs vs. ML"><span class="dot"></span></a></li>
-          <li><a href="#refinado" data-section-id="refinado" aria-label="O modelo refinado"><span class="dot"></span></a></li>
-          <li><a href="#ensemble" data-section-id="ensemble" aria-label="O poder do consenso"><span class="dot"></span></a></li>
-          <li><a href="#explorador" data-section-id="explorador" aria-label="Explorador de genes"><span class="dot"></span></a></li>
+          <li><a href="#hero" data-section-id="hero" aria-label="Abertura" data-i18n-attr="aria-label:nav.hero"><span class="dot"></span></a></li>
+          <li><a href="#problema" data-section-id="problema" aria-label="O problema" data-i18n-attr="aria-label:nav.problema"><span class="dot"></span></a></li>
+          <li><a href="#ideia" data-section-id="ideia" aria-label="A ideia" data-i18n-attr="aria-label:nav.ideia"><span class="dot"></span></a></li>
+          <li><a href="#metodologia" data-section-id="metodologia" aria-label="Metodologia" data-i18n-attr="aria-label:nav.metodologia"><span class="dot"></span></a></li>
+          <li><a href="#achado-features" data-section-id="achado-features" aria-label="Achado 1: atributos" data-i18n-attr="aria-label:nav.features"><span class="dot"></span></a></li>
+          <li><a href="#achado-imbalance" data-section-id="achado-imbalance" aria-label="Achado 2: desbalanceamento" data-i18n-attr="aria-label:nav.imbalance"><span class="dot"></span></a></li>
+          <li><a href="#achado-gnn" data-section-id="achado-gnn" aria-label="Achado 3: GNNs vs. ML" data-i18n-attr="aria-label:nav.gnn"><span class="dot"></span></a></li>
+          <li><a href="#refinado" data-section-id="refinado" aria-label="O modelo refinado" data-i18n-attr="aria-label:nav.refinado"><span class="dot"></span></a></li>
+          <li><a href="#ensemble" data-section-id="ensemble" aria-label="O poder do consenso" data-i18n-attr="aria-label:nav.ensemble"><span class="dot"></span></a></li>
+          <li><a href="#explorador" data-section-id="explorador" aria-label="Explorador de genes" data-i18n-attr="aria-label:nav.explorador"><span class="dot"></span></a></li>
         </ul>
       </nav>
 
@@ -45,6 +62,12 @@
           <path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4" />
         </svg>
       </button>
+
+      <div class="lang-switch" role="group" aria-label="Idioma" data-i18n-attr="aria-label:lang.label">
+        <button type="button" class="lang-btn" data-lang="pt" lang="pt-BR" aria-label="Português" aria-pressed="true">PT</button>
+        <button type="button" class="lang-btn" data-lang="en" lang="en" aria-label="English" aria-pressed="false">EN</button>
+        <button type="button" class="lang-btn" data-lang="es" lang="es" aria-label="Español" aria-pressed="false">ES</button>
+      </div>
       </div>
     </div>
     <div class="scroll-progress" aria-hidden="true"><div class="scroll-progress-fill" id="scroll-progress-fill"></div></div>
@@ -57,11 +80,11 @@
     <!-- ============================================================ -->
     <section class="hero" id="hero">
       <div class="hero-inner">
-        <p class="hero-tag">Dissertação de Mestrado</p>
-        <h1 class="hero-title">Quando genes viram uma rede</h1>
-        <p class="hero-subtitle">Predizendo genes drivers de câncer com Graph Neural Networks</p>
+        <p class="hero-tag" data-i18n="hero.tag">Dissertação de Mestrado</p>
+        <h1 class="hero-title" data-i18n="hero.title">Quando genes viram uma rede</h1>
+        <p class="hero-subtitle" data-i18n="hero.subtitle">Predizendo genes drivers de câncer com Graph Neural Networks</p>
         <p class="hero-byline">Renan Andrades · Universidade Federal do Rio Grande do Sul</p>
-        <p class="hero-intro">
+        <p class="hero-intro" data-i18n="hero.intro">
           Milhares de genes são alterados no câncer. O desafio é encontrar aqueles poucos cujas
           mutações realmente contribuem para impulsionar a doença.
         </p>
@@ -69,23 +92,23 @@
         <dl class="hero-stats" id="hero-stats">
           <div class="hero-stat">
             <dt class="hero-stat-value" data-count-to="19602" data-decimals="0">0</dt>
-            <dd class="hero-stat-label">Genes analisados</dd>
+            <dd class="hero-stat-label" data-i18n="hero.stat1">Genes analisados</dd>
           </div>
           <div class="hero-stat">
             <dt class="hero-stat-value" data-count-to="6" data-decimals="0">0</dt>
-            <dd class="hero-stat-label">Redes de interação</dd>
+            <dd class="hero-stat-label" data-i18n="hero.stat2">Redes de interação</dd>
           </div>
           <div class="hero-stat">
-            <dt class="hero-stat-value" data-count-to="0.677" data-decimals="3" data-comma="true">0,000</dt>
-            <dd class="hero-stat-label">AUC-PR do ensemble</dd>
+            <dt class="hero-stat-value" data-count-to="0.677" data-decimals="3">0,000</dt>
+            <dd class="hero-stat-label" data-i18n="hero.stat3">AUC-PR do ensemble</dd>
           </div>
           <div class="hero-stat">
             <dt class="hero-stat-value" data-count-to="33" data-decimals="0">0</dt>
-            <dd class="hero-stat-label">Genes candidatos</dd>
+            <dd class="hero-stat-label" data-i18n="hero.stat4">Genes candidatos</dd>
           </div>
         </dl>
 
-        <a href="#problema" class="scroll-cue" aria-label="Rolar para começar a leitura">
+        <a href="#problema" class="scroll-cue" aria-label="Rolar para começar a leitura" data-i18n-attr="aria-label:hero.cue">
           <span class="scroll-cue-circle"><span class="scroll-cue-arrow" aria-hidden="true">↓</span></span>
         </a>
       </div>
@@ -99,53 +122,53 @@
       <div class="scrolly-text">
 
         <section class="scrolly-step" id="problema" data-panel="problema">
-          <h2>Encontrar o sinal em meio ao ruído</h2>
-          <p>
+          <h2 data-i18n="problema.h">Encontrar o sinal em meio ao ruído</h2>
+          <p data-i18n="problema.p1">
             O câncer surge a partir de alterações no DNA, mas nem todas têm o mesmo efeito. Muitas
             mutações são passageiras (<em>passenger</em>): aparecem nas células tumorais, mas não
             conferem uma vantagem para o crescimento do tumor. Outras são motoras (<em>driver</em>):
             alterações que podem favorecer a evolução da célula cancerosa.
           </p>
-          <p>
+          <p data-i18n="problema.p2">
             O objetivo, portanto, não é simplesmente encontrar genes alterados. É identificar os
             genes nos quais alterações <em>driver</em> podem estar contribuindo para o
             desenvolvimento do câncer.
           </p>
-          <p>
+          <p data-i18n="problema.p3">
             Esse problema começa com uma assimetria importante. Entre milhares de genes humanos,
             apenas uma pequena parcela está confirmada como <em>driver</em>. Nas seis redes de
             interação de proteínas analisadas nesta dissertação, os genes rotulados como
             <em>driver</em> representam menos de 10% do total em cada rede. A maior parte pertence
             à classe <em>passenger</em> ou permanece sem um rótulo confiável.
           </p>
-          <p>
+          <p data-i18n="problema.p4">
             Para um modelo de aprendizado de máquina, isso significa que os exemplos que queremos
             encontrar são justamente os mais raros.
           </p>
         </section>
 
         <section class="scrolly-step" id="ideia" data-panel="ideia">
-          <h2>Um gene conta apenas parte da história</h2>
-          <p>
+          <h2 data-i18n="ideia.h">Um gene conta apenas parte da história</h2>
+          <p data-i18n="ideia.p1">
             Um gene não existe isoladamente.
           </p>
-          <p>
+          <p data-i18n="ideia.p2">
             As proteínas produzidas pelos genes interagem entre si, formando uma rede de relações
             que ajuda a organizar os processos biológicos dentro da célula. Nas redes de interação
             proteína-proteína (PPI), cada gene pode ser representado como um nó, enquanto cada
             interação entre proteínas corresponde a uma conexão.
           </p>
-          <p>
+          <p data-i18n="ideia.p3">
             Isso muda a pergunta. Em vez de perguntar apenas quais características um gene possui,
             podemos perguntar também com quem ele se conecta e qual é o seu lugar dentro da rede.
           </p>
-          <p>
+          <p data-i18n="ideia.p4">
             Essa informação pode ser relevante porque genes associados ao câncer não estão
             distribuídos de maneira completamente aleatória na rede. O contexto formado por seus
             vizinhos e suas conexões pode carregar sinais que não aparecem quando cada gene é
             analisado sozinho.
           </p>
-          <p>
+          <p data-i18n="ideia.p5">
             É justamente esse tipo de informação que as <em>Graph Neural Networks</em> (GNNs)
             procuram explorar: aprender uma representação de cada gene considerando, ao mesmo
             tempo, suas próprias características e o contexto formado por seus vizinhos.
@@ -153,130 +176,130 @@
         </section>
 
         <section class="scrolly-step" id="metodologia" data-panel="metodologia">
-          <h2>Seis redes, quatro tipos de evidência</h2>
-          <p>
+          <h2 data-i18n="metodologia.h">Seis redes, quatro tipos de evidência</h2>
+          <p data-i18n="metodologia.p1">
             Uma única rede não descreve toda a complexidade das interações entre genes e
             proteínas. Por isso, a dissertação trabalha com seis redes PPI públicas, cada uma
             oferecendo uma representação diferente desse sistema biológico.
           </p>
-          <p>
+          <p data-i18n="metodologia.p2">
             A essas redes foram adicionados quatro tipos de dados moleculares: mutações, variação
             do número de cópias, metilação do DNA e expressão gênica, reunidos para 16 tipos de
             câncer do TCGA.
           </p>
-          <p>
+          <p data-i18n="metodologia.p3">
             Antes do treinamento, foi necessário colocar todas essas informações em uma mesma
             estrutura: padronizar os identificadores dos genes, alinhar redes e atributos e
             calcular medidas que descrevem a posição de cada gene na rede, como grau,
             intermediação, proximidade e coeficiente de agrupamento.
           </p>
-          <p>
+          <p data-i18n="metodologia.p4">
             Só então os modelos puderam ser treinados e comparados. Diferentes estratégias para
             lidar com o forte desbalanceamento entre as classes foram testadas, assim como
             diferentes arquiteturas e configurações de treinamento.
           </p>
-          <p>
+          <p data-i18n="metodologia.p5">
             No final, as previsões dos modelos treinados nas diferentes redes também puderam ser
             combinadas em um <em>ensemble</em>.
           </p>
         </section>
 
         <section class="scrolly-step" id="achado-features" data-panel="achado-features">
-          <h2>O que faz um bom preditor?</h2>
-          <p>
+          <h2 data-i18n="features.h">O que faz um bom preditor?</h2>
+          <p data-i18n="features.p1">
             Nem toda informação disponível sobre um gene ajuda da mesma maneira a identificar um
             <em>driver</em>.
           </p>
-          <p>
+          <p data-i18n="features.p2">
             Foram comparados cinco conjuntos de atributos: mutações, variação do número de cópias,
             metilação do DNA, expressão gênica e a combinação dos quatro tipos de dados.
           </p>
-          <p>
+          <p data-i18n="features.p3">
             Nenhum deles foi o melhor em todas as situações. As mutações se destacaram em uma
             parte importante dos experimentos, enquanto a combinação de diferentes tipos de dados
             geralmente trouxe ganhos.
           </p>
-          <p>
+          <p data-i18n="features.p4">
             Mas o resultado mais consistente veio da própria rede.
           </p>
-          <p>
+          <p data-i18n="features.p5">
             Adicionar medidas de centralidade, como grau, intermediação, proximidade e
             coeficiente de agrupamento, melhorou o desempenho em quase todos os cenários
             testados. Isso aconteceu inclusive nas GNNs, que já utilizam a estrutura do grafo
             durante o treinamento.
           </p>
-          <p>
+          <p data-i18n="features.p6">
             A posição de um gene na rede, portanto, não é apenas uma característica visual da
             estrutura: ela contém informação que pode ajudar na previsão.
           </p>
         </section>
 
         <section class="scrolly-step" id="achado-imbalance" data-panel="achado-imbalance">
-          <h2>O problema dos exemplos desiguais</h2>
-          <p>
+          <h2 data-i18n="imbalance.h">O problema dos exemplos desiguais</h2>
+          <p data-i18n="imbalance.p1">
             Há um problema escondido nos dados: quase todos os exemplos pertencem à classe
             majoritária.
           </p>
-          <p>
+          <p data-i18n="imbalance.p2">
             Com menos de 10% de <em>drivers</em>, um modelo poderia obter uma alta taxa de acerto
             simplesmente aprendendo a prever <em>passenger</em> para quase todos os genes. Esse
             tipo de resultado, porém, teria pouco valor para encontrar justamente os exemplos
             raros que interessam ao estudo.
           </p>
-          <p>
+          <p data-i18n="imbalance.p3">
             Por isso, foram comparadas diferentes estratégias para lidar com o desbalanceamento: a
             função de custo padrão, <em>undersampling</em> da classe majoritária,
             <em>cross-entropy</em> balanceada e <em>focal loss</em> em diferentes configurações.
           </p>
-          <p>
+          <p data-i18n="imbalance.p4">
             O <em>undersampling</em> apresentou os piores resultados de forma consistente. Já a
             <em>cross-entropy</em> balanceada e a <em>focal loss</em> produziram os resultados
             mais fortes na maioria dos cenários.
           </p>
-          <p>
+          <p data-i18n="imbalance.p5">
             A <em>focal loss</em> foi então escolhida como estratégia padrão para a etapa seguinte
             de otimização dos modelos.
           </p>
         </section>
 
         <section class="scrolly-step" id="achado-gnn" data-panel="achado-gnn">
-          <h2>GNNs realmente fazem diferença?</h2>
-          <p>
+          <h2 data-i18n="gnn.h">GNNs realmente fazem diferença?</h2>
+          <p data-i18n="gnn.p1">
             Se a estrutura da rede contém informação útil, uma pergunta natural é: modelos que
             conseguem enxergar essa estrutura realmente levam vantagem?
           </p>
-          <p>
+          <p data-i18n="gnn.p2">
             Para descobrir, três arquiteturas de GNN, GAT, GCN e GraphSAGE, foram comparadas com
             quatro métodos tradicionais de aprendizado de máquina: SVM, Random Forest, Gradient
             Boosting Trees e uma rede neural simples.
           </p>
-          <p>
+          <p data-i18n="gnn.p3">
             O resultado não foi uma vitória simples das GNNs.
           </p>
-          <p>
+          <p data-i18n="gnn.p4">
             O Gradient Boosting Trees (GBT) apresentou desempenho muito próximo ao das GNNs e
             superou GAT e GraphSAGE em todas as redes. Na rede MULTINET, chegou inclusive a
             superar o próprio GCN.
           </p>
-          <p>
+          <p data-i18n="gnn.p5">
             Ainda assim, considerando o conjunto dos experimentos, diferentes atributos, redes e
             estratégias de desbalanceamento, o GCN apresentou o desempenho mais alto e
             consistente com maior frequência.
           </p>
-          <p>
+          <p data-i18n="gnn.p6">
             Por esse motivo, ele foi selecionado para a etapa seguinte do estudo.
           </p>
         </section>
 
         <section class="scrolly-step" id="refinado" data-panel="refinado-ensemble">
-          <h2>Cada rede pede um ajuste</h2>
-          <p>
+          <h2 data-i18n="refinado.h">Cada rede pede um ajuste</h2>
+          <p data-i18n="refinado.p1">
             Com o GCN escolhido, veio uma nova pergunta: qual é o melhor conjunto de
             hiperparâmetros para cada rede PPI? Foram testadas até 864 combinações de arquitetura,
             dropout, taxa de aprendizado e configuração da <em>focal loss</em> para as três redes
             menores, e uma grade reduzida de 288 combinações para as três maiores.
           </p>
-          <p>
+          <p data-i18n="refinado.p2">
             Após o ajuste, cada modelo foi avaliado em um conjunto de teste independente e fixo —
             1.134 genes (159 <em>driver</em>, 975 <em>passenger</em>) comuns às seis redes,
             garantindo uma comparação justa. A rede STRING, a maior das seis, produziu o melhor
@@ -285,13 +308,13 @@
         </section>
 
         <section class="scrolly-step" id="ensemble" data-panel="refinado-ensemble">
-          <h2>A força do consenso</h2>
-          <p>
+          <h2 data-i18n="ensemble.h">A força do consenso</h2>
+          <p data-i18n="ensemble.p1">
             Cada uma das seis redes PPI, treinada isoladamente, captura uma visão parcial e
             ligeiramente diferente da mesma biologia. E se, em vez de escolher uma única rede,
             combinássemos as previsões de todas elas?
           </p>
-          <p>
+          <p data-i18n="ensemble.p2">
             Duas estratégias de <em>ensemble</em> foram testadas: votação por maioria entre as
             seis redes, e a média das probabilidades previstas por cada uma. A segunda,
             Ensemble-Average, superou não só cada rede individual, mas também uma rede
@@ -309,34 +332,34 @@
         <div class="visual-sticky">
 
           <div class="visual-panel" data-panel="problema">
-            <h3 class="visual-title">Distribuição de rótulos por rede PPI</h3>
+            <h3 class="visual-title" data-i18n="viz.imbalance">Distribuição de rótulos por rede PPI</h3>
             <div class="bar-chart" id="chart-class-imbalance"></div>
             <ul class="chart-legend">
               <li><span class="swatch" style="--c: var(--series-driver)"></span>Driver</li>
               <li><span class="swatch" style="--c: var(--series-passenger)"></span>Passenger</li>
-              <li><span class="swatch" style="--c: var(--series-unlabeled)"></span>Não rotulado</li>
+              <li><span class="swatch" style="--c: var(--series-unlabeled)"></span><span data-i18n="group.unlabeled">Não rotulado</span></li>
             </ul>
           </div>
 
           <div class="visual-panel" data-panel="ideia">
-            <h3 class="visual-title">Rede de interação proteína-proteína (ilustrativa)</h3>
+            <h3 class="visual-title" data-i18n="viz.network">Rede de interação proteína-proteína (ilustrativa)</h3>
             <div class="network-panel" id="network-panel">
-              <svg id="chart-ppi-network" class="network-svg" viewBox="0 0 640 520" role="img" aria-label="Rede ilustrativa de interação entre proteínas"></svg>
+              <svg id="chart-ppi-network" class="network-svg" viewBox="0 0 640 520" role="img" aria-label="Rede ilustrativa de interação entre proteínas" data-i18n-attr="aria-label:viz.networkAria"></svg>
             </div>
             <ul class="chart-legend">
               <li><span class="swatch" style="--c: var(--series-driver)"></span>Driver</li>
               <li><span class="swatch" style="--c: var(--series-passenger)"></span>Passenger</li>
-              <li><span class="swatch" style="--c: var(--series-unlabeled)"></span>Não rotulado</li>
+              <li><span class="swatch" style="--c: var(--series-unlabeled)"></span><span data-i18n="group.unlabeled">Não rotulado</span></li>
             </ul>
           </div>
 
           <div class="visual-panel" data-panel="metodologia">
-            <h3 class="visual-title">Metodologia do projeto</h3>
+            <h3 class="visual-title" data-i18n="viz.methodology">Metodologia do projeto</h3>
             <ol class="pipeline" id="chart-methodology"></ol>
           </div>
 
           <div class="visual-panel" data-panel="achado-features">
-            <h3 class="visual-title">Ganho de AUC-PR com medidas de centralidade</h3>
+            <h3 class="visual-title" data-i18n="viz.centrality">Ganho de AUC-PR com medidas de centralidade</h3>
             <div class="facet-stack" id="chart-centrality-lift"></div>
             <div class="dumbbell-legend">
               <ul class="chart-legend">
@@ -345,21 +368,21 @@
                 <li><span class="swatch" style="--c: var(--series-graphsage)"></span>GraphSAGE</li>
               </ul>
               <ul class="chart-legend">
-                <li><span class="swatch outline" style="--c: var(--text-muted)"></span>Multi-ômicos</li>
-                <li><span class="swatch" style="--c: var(--ink)"></span>Multi-ômicos + centralidades</li>
+                <li><span class="swatch outline" style="--c: var(--text-muted)"></span><span data-i18n="viz.omics">Multi-ômicos</span></li>
+                <li><span class="swatch" style="--c: var(--ink)"></span><span data-i18n="viz.omicsCentrality">Multi-ômicos + centralidades</span></li>
               </ul>
             </div>
           </div>
 
           <div class="visual-panel" data-panel="achado-imbalance">
-            <h3 class="visual-title">Estratégias para o desbalanceamento de classes</h3>
+            <h3 class="visual-title" data-i18n="viz.strategies">Estratégias para o desbalanceamento de classes</h3>
             <h4 class="carousel-title" id="carousel-imbalance-title">HPRD</h4>
             <div class="carousel" id="carousel-imbalance">
-              <button type="button" class="carousel-arrow carousel-prev" aria-label="Rede anterior">‹</button>
+              <button type="button" class="carousel-arrow carousel-prev" aria-label="Rede anterior" data-i18n-attr="aria-label:viz.prev">‹</button>
               <div class="carousel-viewport">
                 <div class="bar-chart" id="chart-imbalance-strategies"></div>
               </div>
-              <button type="button" class="carousel-arrow carousel-next" aria-label="Próxima rede">›</button>
+              <button type="button" class="carousel-arrow carousel-next" aria-label="Próxima rede" data-i18n-attr="aria-label:viz.next">›</button>
             </div>
             <div class="carousel-dots" id="carousel-imbalance-dots"></div>
             <ul class="chart-legend">
@@ -370,7 +393,7 @@
           </div>
 
           <div class="visual-panel" data-panel="achado-gnn">
-            <h3 class="visual-title">GNNs vs. aprendizado de máquina tradicional</h3>
+            <h3 class="visual-title" data-i18n="viz.gnn">GNNs vs. aprendizado de máquina tradicional</h3>
             <div class="bar-chart" id="chart-gnn-vs-traditional"></div>
             <ul class="chart-legend">
               <li><span class="swatch" style="--c: var(--series-gat)"></span>GAT</li>
@@ -381,10 +404,10 @@
           </div>
 
           <div class="visual-panel" data-panel="refinado-ensemble">
-            <h3 class="visual-title">Redes individuais vs. ensemble</h3>
+            <h3 class="visual-title" data-i18n="viz.performance">Redes individuais vs. ensemble</h3>
             <div class="bar-chart" id="chart-network-performance"></div>
             <ul class="chart-legend">
-              <li><span class="swatch" style="--c: var(--series-individual)"></span>Redes individuais</li>
+              <li><span class="swatch" style="--c: var(--series-individual)"></span><span data-i18n="viz.individual">Redes individuais</span></li>
               <li><span class="swatch" style="--c: var(--series-ensemble)"></span>Ensemble-Average</li>
             </ul>
           </div>
@@ -399,22 +422,22 @@
     <section class="explorer-section" id="explorador">
       <div class="explorer-layout">
         <div class="explorer-intro">
-          <h2>Procure um gene</h2>
-          <p>
+          <h2 data-i18n="explorer.h">Procure um gene</h2>
+          <p data-i18n="explorer.p1">
             Depois de treinar seis modelos e combinar suas previsões, surge uma pergunta mais
             concreta: o que acontece quando olhamos para cada gene individualmente?
           </p>
-          <p>
+          <p data-i18n="explorer.p2">
             Entre os 19.602 genes analisados, 33 foram apontados como prováveis
             <em>drivers</em> por todos os seis modelos e não possuíam evidência prévia que os
             classificasse dessa maneira. Esses genes representam candidatos que podem ser
             investigados em estudos futuros.
           </p>
-          <p>
+          <p data-i18n="explorer.p3">
             No extremo oposto, 1.477 genes foram classificados como <em>passenger</em> por
             unanimidade entre as seis redes.
           </p>
-          <p>
+          <p data-i18n="explorer.p4">
             Há também casos que mostram por que essas previsões devem ser interpretadas como uma
             forma de priorização, e não como uma confirmação definitiva. O gene
             <strong> YWHAZ</strong>, por exemplo, já catalogado como <em>passenger</em>, recebeu
@@ -422,14 +445,14 @@
             gene a propriedades oncogênicas em outros contextos, embora ele não estivesse
             formalmente catalogado como <em>cancer driver</em>.
           </p>
-          <p>
+          <p data-i18n="explorer.p5">
             Agora é possível explorar essas previsões gene por gene.
           </p>
         </div>
 
         <div class="explorer-tool">
           <div class="explorer-card">
-            <label for="gene-search-input" class="explorer-label">Buscar gene por símbolo</label>
+            <label for="gene-search-input" class="explorer-label" data-i18n="explorer.searchLabel">Buscar gene por símbolo</label>
             <div class="explorer-search-wrap">
               <input
                 id="gene-search-input"
@@ -440,16 +463,17 @@
                 aria-autocomplete="list"
                 autocomplete="off"
                 placeholder="Digite um símbolo, ex.: SP1"
+                data-i18n-attr="placeholder:explorer.placeholder"
               />
-              <ul id="gene-search-listbox" class="explorer-listbox" role="listbox" aria-label="Sugestões de genes" hidden></ul>
+              <ul id="gene-search-listbox" class="explorer-listbox" role="listbox" aria-label="Sugestões de genes" data-i18n-attr="aria-label:explorer.suggestions" hidden></ul>
             </div>
 
             <p class="explorer-status" id="explorer-status" role="status">Carregando dados dos genes…</p>
 
             <div class="explorer-examples" id="explorer-examples">
-              <button type="button" data-example="SP1" title="SP1 — sinalizado como candidato a driver por todas as redes, apesar de não ter rótulo prévio">SP1</button>
-              <button type="button" data-example="YWHAZ" title="YWHAZ — rotulado como passenger, mas previsto como driver por todas as redes">YWHAZ</button>
-              <button type="button" data-example="NF2" title="NF2 — driver conhecido com votação dividida: 3 redes preveem driver, 3 preveem passenger">NF2</button>
+              <button type="button" data-example="SP1" title="SP1 — sinalizado como candidato a driver por todas as redes, apesar de não ter rótulo prévio" data-i18n-attr="title:explorer.exSP1">SP1</button>
+              <button type="button" data-example="YWHAZ" title="YWHAZ — rotulado como passenger, mas previsto como driver por todas as redes" data-i18n-attr="title:explorer.exYWHAZ">YWHAZ</button>
+              <button type="button" data-example="NF2" title="NF2 — driver conhecido com votação dividida: 3 redes preveem driver, 3 preveem passenger" data-i18n-attr="title:explorer.exNF2">NF2</button>
             </div>
 
             <div class="gene-detail" id="gene-detail" hidden>
@@ -457,11 +481,11 @@
 
               <div class="gene-detail-badges">
                 <div>
-                  <div class="badge-label">Rótulo real (ground truth)</div>
+                  <div class="badge-label" data-i18n="explorer.trueLabel">Rótulo real (ground truth)</div>
                   <span class="badge" id="gene-true-label"><span class="badge-dot"></span><span></span></span>
                 </div>
                 <div>
-                  <div class="badge-label">Probabilidade média do ensemble</div>
+                  <div class="badge-label" data-i18n="explorer.avgLabel">Probabilidade média do ensemble</div>
                   <span class="badge-value" id="gene-ensemble-avg"></span>
                 </div>
                 <div>
@@ -470,13 +494,13 @@
                 </div>
               </div>
 
-              <h5 class="gene-chart-heading">Probabilidade prevista por rede</h5>
+              <h5 class="gene-chart-heading" data-i18n="explorer.chartHeading">Probabilidade prevista por rede</h5>
               <div class="bar-chart gene-lollipop" id="gene-network-chart"></div>
 
               <ul class="chart-legend">
-                <li><span class="swatch" style="--c: var(--series-driver)"></span>≥ 0,5 (driver previsto)</li>
-                <li><span class="swatch" style="--c: var(--series-passenger)"></span>&lt; 0,5 (passenger previsto)</li>
-                <li><span class="swatch outline" style="--c: var(--text-muted)"></span>Gene ausente da rede</li>
+                <li><span class="swatch" style="--c: var(--series-driver)"></span><span data-i18n="explorer.legendDriver">≥ 0,5 (driver previsto)</span></li>
+                <li><span class="swatch" style="--c: var(--series-passenger)"></span><span data-i18n="explorer.legendPassenger">&lt; 0,5 (passenger previsto)</span></li>
+                <li><span class="swatch outline" style="--c: var(--text-muted)"></span><span data-i18n="explorer.legendAbsent">Gene ausente da rede</span></li>
               </ul>
             </div>
           </div>
@@ -492,7 +516,7 @@
   <footer class="site-footer">
     <div class="site-footer-inner">
       <div class="footer-col">
-        <h2 class="footer-col-title">Dissertação Completa</h2>
+        <h2 class="footer-col-title" data-i18n="footer.title">Dissertação Completa</h2>
         <p class="footer-col-sub">Prediction of Cancer Driver Genes with Graph Neural Networks: A Comparative Analysis and a Graph Convolutional Network-based Model</p>
         <div class="footer-logos">
           <img class="footer-logo footer-logo-tree" src="assets/logo-gene-tree.png" alt="" />
@@ -501,17 +525,18 @@
         </div>
       </div>
       <div class="footer-col">
-        <p class="footer-meta-line"><strong>Pesquisa por:</strong> Renan Soares de Andrades</p>
-        <p class="footer-meta-line"><strong>Orientação:</strong> Profa. Dra. Mariana Recamonde-Mendoza</p>
-        <p class="footer-meta-line"><strong>Instituição:</strong> Universidade Federal do Rio Grande do Sul (UFRGS)</p>
+        <p class="footer-meta-line" data-i18n="footer.author"><strong>Pesquisa por:</strong> Renan Soares de Andrades</p>
+        <p class="footer-meta-line" data-i18n="footer.advisor"><strong>Orientação:</strong> Profa. Dra. Mariana Recamonde-Mendoza</p>
+        <p class="footer-meta-line" data-i18n="footer.institution"><strong>Instituição:</strong> Universidade Federal do Rio Grande do Sul (UFRGS)</p>
       </div>
       <div class="footer-col footer-col-buttons">
-        <a class="footer-btn footer-btn-primary" href="https://lume.ufrgs.br/handle/10183/261761" target="_blank" rel="noopener noreferrer">Texto completo (Lume)</a>
-        <a class="footer-btn" href="https://github.com/renandrades/mestrado_dissertacao" target="_blank" rel="noopener noreferrer">Código e dados (GitHub)</a>
+        <a class="footer-btn footer-btn-primary" href="https://lume.ufrgs.br/handle/10183/261761" target="_blank" rel="noopener noreferrer" data-i18n="footer.lume">Texto completo (Lume)</a>
+        <a class="footer-btn" href="https://github.com/renandrades/mestrado_dissertacao" target="_blank" rel="noopener noreferrer" data-i18n="footer.github">Código e dados (GitHub)</a>
       </div>
     </div>
   </footer>
 
+  <script src="i18n.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

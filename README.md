@@ -46,10 +46,14 @@ O projeto é apresentado de forma interativa (scrollytelling) em:
 
 A narrativa percorre o problema, a metodologia e os principais resultados, com gráficos que
 acompanham o texto, e termina em um explorador onde é possível buscar qualquer um dos
-19.602 genes e ver a probabilidade prevista por cada rede PPI e pelo *ensemble*. O site
-abre em português e no tema claro; um botão no canto superior direito alterna para o tema
-escuro (a escolha fica salva no navegador). Em telas verticais, como celulares, o gráfico
-fica fixo no topo e o texto rola abaixo dele.
+19.602 genes e ver a probabilidade prevista por cada rede PPI e pelo *ensemble*.
+
+- **Idiomas:** português (padrão), inglês e espanhol, escolhidos em `PT · EN · ES` no canto
+  superior direito, sempre na mesma URL. Para enviar o link já em outro idioma, use
+  `?lang=en` ou `?lang=es`.
+- **Tema:** claro por padrão; o ícone de lua/sol alterna para o escuro.
+- As escolhas de idioma e tema ficam salvas no navegador de cada visitante.
+- **Celular:** em telas verticais, o gráfico fica fixo no topo e o texto rola abaixo dele.
 
 ### Tecnologia
 
@@ -58,13 +62,21 @@ build. Os gráficos são construídos diretamente no DOM/SVG e animados com tran
 
 ```
 website/
-├── index.html                      # estrutura e textos de todas as seções
+├── index.html                      # estrutura e textos em português de todas as seções
+├── i18n.js                         # traduções em inglês e espanhol (+ textos gerados pelos gráficos)
 ├── style.css                       # tema claro/escuro (variáveis CSS), layout e responsividade
-├── script.js                       # dados dos gráficos, renderização, animações e explorador
+├── script.js                       # dados dos gráficos, renderização, animações, idiomas e explorador
 ├── data/gene-predictions.json      # predições por gene usadas pelo explorador
 ├── assets/                         # logos do rodapé
 └── dissertacao_Renan_Andrades.pdf
 ```
+
+### Editar os textos
+
+O texto em português fica direto no `index.html`. Cada trecho traduzível tem uma chave,
+por exemplo `<p data-i18n="problema.p1">`, e as versões em inglês e espanhol ficam em
+`i18n.js`, sob a mesma chave (`en` e `es`). Ao mudar um texto em português, atualize também
+as duas traduções; se uma chave faltar em `i18n.js`, aquele trecho aparece em português.
 
 ### Rodar localmente
 
