@@ -12,6 +12,8 @@
   'use strict';
 
   var REDUCED_MOTION = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Must match the stacked "chart on top, text below" breakpoint in style.css.
+  var MOBILE = window.matchMedia('(max-width: 900px)');
 
   /* ========================================================================
      REAL DATA — every number below comes from the dissertation (see the
@@ -202,6 +204,11 @@
         node.appendChild(value);
         node.appendChild(label);
         document.body.appendChild(node);
+        // Touch: a tapped tooltip stays until the next tap or a scroll.
+        // Capture phase, so it runs BEFORE the tapped target's own handler
+        // (which then re-shows it for that target).
+        document.addEventListener('pointerdown', function (e) { if (e.pointerType !== 'mouse') hide(); }, true);
+        window.addEventListener('scroll', hide, { passive: true });
       }
       return node;
     }
@@ -233,11 +240,16 @@
      * `target`, showing `valueText`/`labelText` (or functions returning
      * them, for rows whose values can change later). */
     function wire(target, valueText, labelText) {
-      target.addEventListener('pointerenter', function (e) {
+      function showFor(e) {
         show(e, typeof valueText === 'function' ? valueText() : valueText, typeof labelText === 'function' ? labelText() : labelText);
-      });
-      target.addEventListener('pointermove', move);
-      target.addEventListener('pointerleave', hide);
+      }
+      // Mouse: classic hover. Touch/pen: enter/leave fire around a single
+      // tap, so a tap shows the tooltip instead (hidden by ensure()'s
+      // listeners on the next tap or scroll).
+      target.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') showFor(e); });
+      target.addEventListener('pointermove', function (e) { if (e.pointerType === 'mouse') move(e); });
+      target.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') hide(); });
+      target.addEventListener('pointerdown', function (e) { if (e.pointerType !== 'mouse') showFor(e); });
     }
 
     return { show: show, move: move, hide: hide, wire: wire };
@@ -460,6 +472,24 @@
 
     relaxNetworkLayout(NETWORK_GRAPH.nodes, NETWORK_GRAPH.links, VIEW_W, VIEW_H, 260);
 
+    // The relaxed graph only fills the middle of the 640x520 canvas — fine
+    // on desktop, but on a phone that renders labels at ~6px. Mobile crops
+    // the viewBox to the nodes' own bounding box (+ room for the float
+    // amplitude, node radius and the labels drawn to each node's right).
+    var xs = NETWORK_GRAPH.nodes.map(function (n) { return n.x; });
+    var ys = NETWORK_GRAPH.nodes.map(function (n) { return n.y; });
+    var crop = {
+      x: Math.min.apply(null, xs) - 24,
+      y: Math.min.apply(null, ys) - 24,
+    };
+    crop.w = Math.max.apply(null, xs) + 78 - crop.x;
+    crop.h = Math.max.apply(null, ys) + 24 - crop.y;
+    function applyViewBox() {
+      svg.setAttribute('viewBox', MOBILE.matches ? [crop.x, crop.y, crop.w, crop.h].join(' ') : '0 0 ' + VIEW_W + ' ' + VIEW_H);
+    }
+    applyViewBox();
+    if (MOBILE.addEventListener) MOBILE.addEventListener('change', applyViewBox);
+
     NETWORK_GRAPH.nodes.forEach(function (n, i) {
       n.baseX = n.x;
       n.baseY = n.y;
@@ -589,6 +619,12 @@
     var activeId = null;
 
     function open(entry) {
+      // Mobile: bottom sheet on <body> (fixed positioning would otherwise be
+      // trapped by the transformed panel ancestors). Desktop: over the graph.
+      var host = MOBILE.matches ? document.body : panel;
+      if (card.parentNode !== host) host.appendChild(card);
+      card.classList.toggle('is-sheet', MOBILE.matches);
+      Tooltip.hide(); // the card already names the gene; a tap also showed the tooltip
       activeId = entry.node.id;
       geneEl.textContent = entry.node.id;
       groupEl.innerHTML = '';
@@ -614,6 +650,12 @@
     document.addEventListener('click', function (e) {
       if (!card.hidden && !card.contains(e.target)) close();
     });
+
+    // The mobile sheet floats over the text, so scrolling the story on
+    // (no tap involved) must dismiss it too.
+    window.addEventListener('scroll', function () {
+      if (!card.hidden && card.classList.contains('is-sheet')) close();
+    }, { passive: true });
   }
 
   /* ========================================================================
@@ -1184,34 +1226,69 @@
     var trackedIds = ['hero', 'problema', 'ideia', 'metodologia', 'achado-features', 'achado-imbalance', 'achado-gnn', 'refinado', 'ensemble', 'explorador'];
     var dots = document.querySelectorAll('.section-dots a');
     var panels = document.querySelectorAll('.visual-panel');
+    var visual = document.querySelector('.scrolly-visual');
+    var sections = trackedIds.map(function (id) { return document.getElementById(id); }).filter(Boolean);
     var grownPanels = {};
+    var currentId = null;
 
-    var observer = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        var id = entry.target.id;
-        var panelId = entry.target.getAttribute('data-panel');
+    // The first chart is already showing (empty, pre-animation) when the
+    // band/column scrolls into view, rather than an empty frame.
+    if (panels.length) panels[0].classList.add('is-active');
 
-        dots.forEach(function (dot) { dot.classList.toggle('is-active', dot.getAttribute('data-section-id') === id); });
+    // The section that "is being read" is the one crossing this y. Desktop:
+    // middle of the viewport. Mobile: middle of the text area left BELOW the
+    // sticky chart band (its bottom edge, clamped while it's still
+    // scrolling into place).
+    function readingLine() {
+      var vh = window.innerHeight;
+      if (!MOBILE.matches || !visual) return vh * 0.5;
+      var top = Math.min(Math.max(visual.getBoundingClientRect().bottom, 0), vh * 0.65);
+      return top + (vh - top) * 0.4;
+    }
 
-        if (panelId) {
-          panels.forEach(function (p) { p.classList.toggle('is-active', p.getAttribute('data-panel') === panelId); });
-          if (!grownPanels[panelId]) {
-            grownPanels[panelId] = true;
-            onSectionEnter(id, panelId, true);
-          } else {
-            onSectionEnter(id, panelId, false);
-          }
+    function activate(section) {
+      var id = section.id;
+      var panelId = section.getAttribute('data-panel');
+
+      dots.forEach(function (dot) { dot.classList.toggle('is-active', dot.getAttribute('data-section-id') === id); });
+
+      if (panelId) {
+        panels.forEach(function (p) { p.classList.toggle('is-active', p.getAttribute('data-panel') === panelId); });
+        if (!grownPanels[panelId]) {
+          grownPanels[panelId] = true;
+          onSectionEnter(id, panelId, true);
         } else {
-          onSectionEnter(id, null, false);
+          onSectionEnter(id, panelId, false);
         }
-      });
-    }, { threshold: 0.5, rootMargin: '-15% 0px -15% 0px' });
+      } else {
+        onSectionEnter(id, null, false);
+      }
+    }
 
-    trackedIds.forEach(function (id) {
-      var node = document.getElementById(id);
-      if (node) observer.observe(node);
-    });
+    var queued = false;
+    function update() {
+      queued = false;
+      var line = readingLine();
+      for (var i = 0; i < sections.length; i += 1) {
+        var r = sections[i].getBoundingClientRect();
+        if (r.top <= line && r.bottom > line) {
+          if (sections[i].id !== currentId) {
+            currentId = sections[i].id;
+            activate(sections[i]);
+          }
+          return;
+        }
+      }
+      // In a gap between sections (e.g. step padding): keep the last one.
+    }
+
+    function requestUpdate() {
+      if (!queued) { queued = true; requestAnimationFrame(update); }
+    }
+
+    window.addEventListener('scroll', requestUpdate, { passive: true });
+    window.addEventListener('resize', requestUpdate);
+    update();
 
     // Clicking a nav dot should smooth-scroll even though href="#id" would
     // already do that natively — intercepted only to keep behavior identical
@@ -1226,6 +1303,72 @@
         }
       });
     });
+  }
+
+  /** Each panel's content is wrapped in .panel-fit and, only when it's
+   * taller than the panel, uniformly scaled down just enough to fit (never
+   * up), with a matching negative margin so the panel's vertical centering
+   * sees the scaled height. Mostly matters on mobile (the sticky chart band
+   * is about half the screen tall), but also on short laptop screens. */
+  function setupPanelFit() {
+    var panels = Array.prototype.slice.call(document.querySelectorAll('.visual-panel'));
+    var fits = panels.map(function (panel) {
+      var fit = el('div', 'panel-fit');
+      while (panel.firstChild) fit.appendChild(panel.firstChild);
+      panel.appendChild(fit);
+      return { panel: panel, fit: fit };
+    });
+
+    function fitAll() {
+      fits.forEach(function (f) {
+        f.fit.style.transform = '';
+        f.fit.style.marginBottom = '';
+        var cs = getComputedStyle(f.panel);
+        var avail = f.panel.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+        var h = f.fit.offsetHeight;
+        if (h > avail && avail > 0) {
+          var s = avail / h;
+          f.fit.style.transform = 'scale(' + s + ')';
+          f.fit.style.marginBottom = -(h * (1 - s)) + 'px';
+        }
+      });
+    }
+
+    var queued = false;
+    function requestFit() {
+      if (!queued) { queued = true; requestAnimationFrame(function () { queued = false; fitAll(); }); }
+    }
+
+    window.addEventListener('resize', requestFit);
+    if (MOBILE.addEventListener) MOBILE.addEventListener('change', requestFit);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(requestFit);
+    return requestFit;
+  }
+
+  /** Light by default; the visitor's choice is remembered for next visits.
+   * The saved value is applied pre-paint by the inline script in <head>. */
+  function setupThemeToggle() {
+    var btn = document.getElementById('theme-toggle');
+    var root = document.documentElement;
+    if (!btn) return;
+
+    function sync() {
+      var dark = root.getAttribute('data-theme') === 'dark';
+      var label = dark ? 'Ativar tema claro' : 'Ativar tema escuro';
+      btn.setAttribute('aria-label', label);
+      btn.setAttribute('title', label);
+    }
+
+    btn.addEventListener('click', function () {
+      var dark = root.getAttribute('data-theme') !== 'dark';
+      root.classList.add('theme-transition');
+      if (dark) root.setAttribute('data-theme', 'dark'); else root.removeAttribute('data-theme');
+      try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch (e) { /* private mode: just don't persist */ }
+      sync();
+      setTimeout(function () { root.classList.remove('theme-transition'); }, 320);
+    });
+
+    sync();
   }
 
   function setupNarrativeReveal() {
@@ -1253,6 +1396,10 @@
     var networkPerformance = renderNetworkPerformance();
     var carousel = setupImbalanceCarousel();
 
+    setupThemeToggle();
+    var requestFit = setupPanelFit();
+    requestFit();
+
     setupSections(function (sectionId, panelId, isFirstTimeForPanel) {
       if (!isFirstTimeForPanel) {
         // "O poder do consenso": the shared chart is already on screen (its
@@ -1275,6 +1422,9 @@
         networkPerformance.growBase();
         if (sectionId === 'ensemble') networkPerformance.revealExtra();
       }
+      // Some panels only get their content now (e.g. the carousel's first
+      // slide), so the mobile fit must be re-measured.
+      requestFit();
     });
   });
 })();

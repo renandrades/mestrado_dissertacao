@@ -30,7 +30,7 @@ de máquina, além de estratégias de mitigação de desbalanceamento de classes
   usados na dissertação
 - [`dissertation/`](dissertation/) — arquivos-fonte LaTeX, PDF final e arquivo compactado da
   dissertação
-- [`website/`](website/) — código-fonte do site acadêmico interativo (scrollytelling)
+- [`website/`](website/) — site interativo (scrollytelling) que apresenta a dissertação
 
 ## Dissertação
 
@@ -40,13 +40,48 @@ de máquina, além de estratégias de mitigação de desbalanceamento de classes
 
 ## Website
 
-O projeto é apresentado de forma interativa (scrollytelling), em português e inglês, em:
+O projeto é apresentado de forma interativa (scrollytelling) em:
 
 **https://renandrades.github.io/mestrado_dissertacao/**
 
-O código-fonte do site (Astro + D3.js) está em [`website/`](website/) e é publicado
-automaticamente no GitHub Pages a cada push na branch `main` que altere essa pasta (veja
-[`.github/workflows/pages.yml`](.github/workflows/pages.yml)).
+A narrativa percorre o problema, a metodologia e os principais resultados, com gráficos que
+acompanham o texto, e termina em um explorador onde é possível buscar qualquer um dos
+19.602 genes e ver a probabilidade prevista por cada rede PPI e pelo *ensemble*. O site
+abre em português e no tema claro; um botão no canto superior direito alterna para o tema
+escuro (a escolha fica salva no navegador). Em telas verticais, como celulares, o gráfico
+fica fixo no topo e o texto rola abaixo dele.
+
+### Tecnologia
+
+HTML, CSS e JavaScript puros: sem frameworks, sem bibliotecas externas e sem etapa de
+build. Os gráficos são construídos diretamente no DOM/SVG e animados com transições CSS.
+
+```
+website/
+├── index.html                      # estrutura e textos de todas as seções
+├── style.css                       # tema claro/escuro (variáveis CSS), layout e responsividade
+├── script.js                       # dados dos gráficos, renderização, animações e explorador
+├── data/gene-predictions.json      # predições por gene usadas pelo explorador
+├── assets/                         # logos do rodapé
+└── dissertacao_Renan_Andrades.pdf
+```
+
+### Rodar localmente
+
+Como o explorador carrega `data/gene-predictions.json` via `fetch`, o site precisa ser
+servido por HTTP (abrir o `index.html` direto do disco não carrega os dados dos genes):
+
+```bash
+cd website
+python3 -m http.server 8000
+# abra http://localhost:8000
+```
+
+### Publicação
+
+O site é publicado automaticamente no GitHub Pages a cada push na branch `main` que altere
+a pasta `website/`: o workflow [`.github/workflows/pages.yml`](.github/workflows/pages.yml)
+envia o conteúdo da pasta como está, sem build.
 
 ## Reprodutibilidade
 
